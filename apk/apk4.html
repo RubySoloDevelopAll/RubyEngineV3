@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Nickname Store · RubyEngine</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7c5cff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RubyEngine">
+<link rel="apple-touch-icon" href="../image/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../image/icon-192.png">
+
+<style>
+:root{
+  --bg:#0a0518;--bg2:#1a0a2e;--card:rgba(255,255,255,0.04);
+  --card-solid:#170e2e;--fg:#f5f0ff;--mut:#8b7bb8;
+  --acc:#a78bfa;--acc2:#f472b6;--acc3:#22d3ee;
+  --line:rgba(167,139,250,0.14);
+  --grad:linear-gradient(135deg,#a78bfa 0%,#f472b6 100%);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(167,139,250,0.22), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(244,114,182,0.14), transparent),
+    radial-gradient(ellipse 70% 50% at 10% 80%, rgba(34,211,238,0.10), transparent);
+  color:var(--fg);
+  min-height:100dvh;
+  padding:16px;
+  padding-top:calc(16px + env(safe-area-inset-top));
+  padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  overflow-x:hidden;
+}
+
+/* ===== TOP BAR ===== */
+.top{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.back{
+  width:42px;height:42px;border-radius:14px;
+  border:1px solid var(--line);
+  background:var(--card);
+  backdrop-filter:blur(10px);
+  display:grid;place-items:center;color:var(--fg);
+  text-decoration:none;font-size:20px;flex-shrink:0;
+  transition:all .2s;
+}
+.back:active{transform:scale(.92);background:rgba(167,139,250,0.15)}
+.title-wrap{display:flex;flex-direction:column;gap:2px}
+.title{font-size:17px;font-weight:800;letter-spacing:-0.01em;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent}
+.subtitle{font-size:11px;color:var(--mut);letter-spacing:.06em;font-weight:600;text-transform:uppercase}
+
+/* ===== CARD ===== */
+.card{
+  background:var(--card);
+  backdrop-filter:blur(14px);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:14px;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(400px circle at 50% 0%, rgba(167,139,250,0.10), transparent 60%);
+  pointer-events:none;
+}
+
+/* ===== FORM ===== */
+.f{margin-bottom:12px;position:relative;z-index:1}
+.f:last-child{margin-bottom:0}
+.f label{
+  display:block;font-size:11px;color:var(--mut);
+  margin-bottom:6px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+}
+.input-wrap{position:relative}
+.input-icon{
+  position:absolute;top:50%;left:14px;transform:translateY(-50%);
+  font-size:14px;opacity:.5;pointer-events:none;
+}
+.f input{
+  width:100%;padding:14px 14px 14px 40px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  color:var(--fg);font-size:15px;font-family:inherit;font-weight:600;
+  transition:all .2s;
+}
+.f input:focus{
+  outline:none;
+  border-color:rgba(167,139,250,0.5);
+  background:rgba(167,139,250,0.06);
+  box-shadow:0 0 0 4px rgba(167,139,250,0.1);
+}
+.f input::placeholder{color:var(--mut);font-weight:400}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:360px){.row{grid-template-columns:1fr}}
+
+.f select{
+  width:100%;padding:14px 36px 14px 14px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  color:var(--fg);font-size:14px;font-family:inherit;font-weight:600;
+  appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b7bb8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  transition:all .2s;
+  cursor:pointer;
+}
+.f select:focus{outline:none;border-color:rgba(167,139,250,0.5);background-color:rgba(167,139,250,0.06)}
+.f select option{background:#170e2e;color:var(--fg)}
+
+/* ===== TOGGLE ===== */
+.toggle-row{
+  display:flex;gap:8px;
+  position:relative;z-index:1;
+}
+.toggle-btn{
+  flex:1;padding:11px;
+  border-radius:11px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  color:var(--mut);
+  font-family:inherit;font-size:12.5px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.toggle-btn.active{
+  background:rgba(167,139,250,0.15);
+  border-color:rgba(167,139,250,0.45);
+  color:var(--acc);
+  box-shadow:0 0 20px rgba(167,139,250,0.2);
+}
+.toggle-btn:active{transform:scale(.97)}
+
+/* ===== BUTTON ===== */
+.go{
+  width:100%;padding:16px;
+  border-radius:14px;
+  background:var(--grad);
+  color:#0a0518;font-size:15px;font-weight:800;
+  letter-spacing:.03em;
+  border:none;font-family:inherit;
+  cursor:pointer;
+  box-shadow:0 10px 30px -8px rgba(167,139,250,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+  transition:transform .15s, box-shadow .2s;
+  margin-bottom:18px;
+  position:relative;overflow:hidden;
+}
+.go::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg, rgba(255,255,255,0.3), transparent 50%);
+  pointer-events:none;
+}
+.go:active{
+  transform:scale(.97);
+  box-shadow:0 4px 16px -4px rgba(167,139,250,0.6), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+/* ===== RESULT ===== */
+.stats{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:12px;padding:0 4px;
+}
+.stats-label{font-size:12px;color:var(--mut);font-weight:600;letter-spacing:.04em}
+.stats-count{
+  font-size:11px;font-weight:800;
+  padding:3px 10px;border-radius:999px;
+  background:rgba(167,139,250,0.12);
+  color:var(--acc);
+  border:1px solid rgba(167,139,250,0.25);
+}
+
+.item{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:13px 14px;
+  border-radius:13px;
+  background:rgba(255,255,255,0.035);
+  border:1px solid var(--line);
+  margin-bottom:8px;
+  animation:up .35s cubic-bezier(.4,0,.2,1) both;
+  transition:all .2s;
+}
+.item:hover{border-color:rgba(167,139,250,0.35);background:rgba(167,139,250,0.06)}
+.item:active{transform:scale(.98)}
+@keyframes up{
+  from{opacity:0;transform:translateY(10px) scale(.98)}
+  to{opacity:1;transform:none}
+}
+.item span{
+  font-size:14px;font-weight:700;
+  word-break:break-word;flex:1;
+  letter-spacing:-0.005em;
+  line-height:1.35;
+}
+.cp{
+  flex-shrink:0;
+  padding:8px 13px;border-radius:9px;
+  background:rgba(167,139,250,0.12);
+  border:1px solid rgba(167,139,250,0.28);
+  color:var(--acc);
+  font-size:11.5px;font-weight:800;
+  font-family:inherit;letter-spacing:.04em;
+  cursor:pointer;transition:all .2s;
+  min-width:62px;
+}
+.cp:active{transform:scale(.94)}
+.cp.ok{
+  background:rgba(61,220,132,0.15);
+  color:#3ddc84;
+  border-color:rgba(61,220,132,0.4);
+}
+
+/* ===== EMPTY ===== */
+.empty{
+  text-align:center;padding:40px 20px;
+  color:var(--mut);font-size:13px;
+  display:none;
+}
+.empty.show{display:block}
+.empty-icon{font-size:38px;margin-bottom:10px;opacity:.4}
+
+/* ===== BG DECOR ===== */
+.bg-orb{
+  position:fixed;
+  border-radius:50%;
+  filter:blur(80px);
+  pointer-events:none;
+  opacity:.4;
+  z-index:-1;
+}
+.orb1{width:200px;height:200px;background:#a78bfa;top:-60px;left:-60px}
+.orb2{width:160px;height:160px;background:#f472b6;top:40%;right:-70px}
+</style>
+</head><body>
+
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+
+<div class="top">
+  <a class="back" href="../apk.html">←</a>
+  <div class="title-wrap">
+    <div class="title">Nickname Store</div>
+    <div class="subtitle">Generator Nama Keren</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="f">
+    <label>Kata Dasar</label>
+    <div class="input-wrap">
+      <span class="input-icon">✨</span>
+      <input id="k" placeholder="kopi, sneaker, hijab, gaming…" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="row" style="margin-bottom:12px">
+    <div class="f" style="margin-bottom:0">
+      <label>Gaya</label>
+      <select id="s">
+        <option value="modern">✦ Modern</option>
+        <option value="kekinian">🔥 Kekinian</option>
+        <option value="klasik">🏛️ Klasik</option>
+        <option value="unik">🎭 Unik</option>
+        <option value="elegan">👑 Elegan</option>
+        <option value="cyber">⚡ Cyber</option>
+      </select>
+    </div>
+    <div class="f" style="margin-bottom:0">
+      <label>Pemisah</label>
+      <select id="sep">
+        <option value=" ">Spasi</option>
+        <option value="">Rapat</option>
+        <option value="·">· Titik Tengah</option>
+        <option value="-">- Strip</option>
+        <option value="_">_ Underscore</option>
+        <option value="|">| Pipe</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="f">
+    <label>Dekorasi</label>
+    <div class="toggle-row">
+      <button class="toggle-btn active" data-deco="off" id="decoOff">⬜ Simpel</button>
+      <button class="toggle-btn" data-deco="on" id="decoOn">✨ Dekorasi</button>
+    </div>
+  </div>
+</div>
+
+<button class="go" id="gen">✨ Generate 12 Nama</button>
+
+<div class="stats" id="stats" style="display:none">
+  <span class="stats-label">Hasil</span>
+  <span class="stats-count" id="count">0</span>
+</div>
+
+<div id="out"></div>
+
+<div class="empty" id="empty">
+  <div class="empty-icon">🎲</div>
+  <div>Isi kata dasar &amp; tekan Generate</div>
+</div>
+
+<script src="../js/sfx.js"></script>
+  
+  <script>
+(function(){
+'use strict';
+
+// ============== WORD BANKS ==============
+// Setiap gaya punya: prefix, suffix, pattern rules
+// Kombinasi: 6 gaya × ~15 prefix × ~12 suffix × 6 pattern = ribuan variasi
+
+var BANKS = {
+  modern: {
+    pre: ['Nova','Lux','Prime','Zea','Aero','Meta','Neo','Flux','Zen','Ion',
+          'Volt','Pixel','Neon','Echo','Lynx','Vertex','Halo','Orb','Cuber','Prism'],
+    suf: ['Store','Hub','Point','Space','Zone','Lab','Kit','Co','Box','Base','Stack','Works']
+  },
+  kekinian: {
+    pre: ['Kuy','Vibes','Gas','Santuy','Cuan','Mantul','Auto','Sultan','Gaes','Gokil',
+          'Kece','Bacot','Fix','Pol','Trus','Ampun','Baper','Gercep','Random','Sat-set'],
+    suf: ['Gacor','Mania','Viral','Hits','Squad','Gang','Crew','Fam','Bros','Beb','Cuy','Rizz']
+  },
+  klasik: {
+    pre: ['Toko','Kedai','Warung','Griya','Bakti','Saudara','Karya','Bina','Sumber','Anugerah',
+          'Berkah','Cahaya','Mekar','Maju','Sari','Tirta','Putra','Wangi','Indah','Utama'],
+    suf: ['Jaya','Abadi','Sentosa','Makmur','Sejahtera','Utama','Mandiri','Agung','Mulya','Lestari','Perkasa','Kencana']
+  },
+  unik: {
+    pre: ['Kibo','Zoro','Xylo','Quirk','Nebu','Vex','Zephyr','Krypto','Myst','Zero',
+          'Zora','Yuki','Xenon','Pixel','Glyph','Rune','Nyx','Onyx','Void','Wisp'],
+    suf: ['Lab','Verse','Nest','Den','Loft','Pod','Realm','Vault','Grove','Hollow','Spire','Crypt']
+  },
+  elegan: {
+    pre: ['Aurel','Vero','Celest','Lumi','Eleg','Noir','Blanc','Oro','Velvet','Ivory',
+          'Regal','Royale','Luna','Aurum','Sage','Opal','Pearl','Sol','Sterling','Belle'],
+    suf: ['Boutique','Atelier','Maison','Couture','Luxe','Palace','Manor','Estate','Grove','Court','Pavilion','Château']
+  },
+  cyber: {
+    pre: ['Neo','Cyb','Hex','Nano','Bit','Quan','Sync','Grid','Byte','Code',
+          'Data','Vox','Krypt','Pulse','Rift','Sig','Tera','Zen','Zero','Glitch'],
+    suf: ['Nix','Core','Sys','Node','Link','Net','Bot','Wave','Flux','Chip','Byte','Seed']
+  }
+};
+
+// ============== PATTERN VARIANTS ==============
+// Pattern memakai placeholder: {P}=prefix, {K}=kata dasar, {S}=suffix
+// {S1}/{S2} = separator (pakai nilai yang di-pick dari dropdown)
+// {D} = dekorasi
+var PATTERNS = [
+  {tpl:'{P}{S1}{K}{S1}{S}', w:3},
+  {tpl:'{P}{S1}{K}',         w:3},
+  {tpl:'{K}{S1}{S}',         w:2},
+  {tpl:'{P}{K}{S}',          w:1},   // no separator
+  {tpl:'{K}{S}',             w:2},
+  {tpl:'{P}{S2}{K}',         w:1},   // mixed separator
+  {tpl:'{K}{S2}{S}',         w:1},
+  {tpl:'{P}{S1}{K}{S2}{S}',  w:2}
+];
+
+// ============== DEKORASI ==============
+var DECOS = [
+  {pre:'',post:''},
+  {pre:'',post:''},
+  {pre:'✦ ',post:' ✦'},
+  {pre:'',post:''},
+  {pre:'',post:''},
+  {pre:'꧁',post:'꧂'},
+  {pre:'「',post:'」'},
+  {pre:'◈ ',post:' ◈'},
+  {pre:'★ ',post:' ★'},
+  {pre:'❖ ',post:' ❖'},
+  {pre:'',post:''},
+  {pre:'✧ ',post:' ✧'}
+];
+
+// ============== UTILS ==============
+function rnd(a){return a[Math.floor(Math.random()*a.length)]}
+function cap(s){return s ? s.charAt(0).toUpperCase()+s.slice(1) : s}
+function pickWeighted(list){
+  var total=0;for(var i=0;i<list.length;i++)total+=list[i].w;
+  var r=Math.random()*total;
+  for(i=0;i<list.length;i++){r-=list[i].w;if(r<=0)return list[i];}
+  return list[0];
+}
+
+// ============== GENERATOR ==============
+function generate(kata, gaya, sepUser, decoOn){
+  var bank = BANKS[gaya] || BANKS.modern;
+  var kataCap = cap(kata);
+
+  // Separator alternatif (selain yang dipilih user)
+  var sepAlt = [sepUser, '·', '_', '-', '|', ' '][Math.floor(Math.random()*6)];
+  if(sepAlt === sepUser) sepAlt = ['·','_','|'][Math.floor(Math.random()*3)];
+
+  var pat = pickWeighted(PATTERNS);
+  var P = rnd(bank.pre);
+  var S = rnd(bank.suf);
+  var D = decoOn ? rnd(DECOS) : {pre:'',post:''};
+
+  var txt = pat.tpl
+    .replace('{P}', P)
+    .replace('{K}', kataCap)
+    .replace('{S}', S)
+    .replace('{S1}', sepUser)
+    .replace('{S2}', sepAlt);
+
+  return D.pre + txt + D.post;
+}
+
+// ============== UI LOGIC ==============
+var inputK = document.getElementById('k');
+var selStyle = document.getElementById('s');
+var selSep = document.getElementById('sep');
+var out = document.getElementById('out');
+var empty = document.getElementById('empty');
+var stats = document.getElementById('stats');
+var countEl = document.getElementById('count');
+var btnGen = document.getElementById('gen');
+var decoOn = false;
+
+// Toggle dekorasi
+var btnOff = document.getElementById('decoOff');
+var btnOn = document.getElementById('decoOn');
+btnOff.addEventListener('click', function(){
+  decoOn = false;
+  btnOff.classList.add('active');
+  btnOn.classList.remove('active');
+  if(window.SFX && SFX.tap) SFX.tap();
+});
+btnOn.addEventListener('click', function(){
+  decoOn = true;
+  btnOn.classList.add('active');
+  btnOff.classList.remove('active');
+  if(window.SFX && SFX.tap) SFX.tap();
+});
+
+// Copy helper
+function attachCopy(row, txt){
+  var btn = row.querySelector('.cp');
+  btn.addEventListener('click', function(){
+    var done = function(){
+      btn.textContent = '✓ OK';
+      btn.classList.add('ok');
+      if(window.SFX && SFX.pickup) SFX.pickup();
+      else if(window.SFX && SFX.tap) SFX.tap();
+      setTimeout(function(){
+        btn.textContent = 'Copy';
+        btn.classList.remove('ok');
+      }, 1300);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done).catch(done);
+    } else {
+      try{
+        var ta = document.createElement('textarea');
+        ta.value = txt;
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }catch(e){}
+      done();
+    }
+  });
+}
+
+// Generate
+var COUNT = 12;
+btnGen.addEventListener('click', function(){
+  var kata = inputK.value.trim();
+  if(!kata){
+    inputK.focus();
+    if(window.SFX && SFX.err) SFX.err();
+    // shake effect
+    inputK.style.borderColor = '#f472b6';
+    setTimeout(function(){ inputK.style.borderColor = ''; }, 500);
+    return;
+  }
+
+  var gaya = selStyle.value;
+  var sep = selSep.value;
+
+  out.innerHTML = '';
+  empty.classList.remove('show');
+
+  var seen = {};
+  var n = 0;
+  var attempts = 0;
+  var frag = document.createDocumentFragment();
+
+  while(n < COUNT && attempts < COUNT * 30){
+    attempts++;
+    var name = generate(kata, gaya, sep, decoOn);
+    if(seen[name]) continue;
+    seen[name] = 1;
+
+    var row = document.createElement('div');
+    row.className = 'item';
+    row.style.animationDelay = (n * 35) + 'ms';
+    row.innerHTML = '<span></span><button class="cp">Copy</button>';
+    row.querySelector('span').textContent = name;
+    attachCopy(row, name);
+    frag.appendChild(row);
+    n++;
+  }
+
+  out.appendChild(frag);
+
+  stats.style.display = 'flex';
+  countEl.textContent = n + ' nama';
+
+  if(window.SFX && SFX.win) SFX.win();
+  else if(window.SFX && SFX.ok) SFX.ok();
+});
+
+// Enter untuk generate
+inputK.addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ e.preventDefault(); btnGen.click(); }
+});
+
+// Auto-focus
+setTimeout(function(){ inputK.focus(); }, 300);
+
+})();
+</script>
+  
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('../sw.js', { scope: '../' })
+        .then(reg => console.log('[PWA] SW registered:', reg.scope))
+        .catch(err => console.warn('[PWA] SW failed:', err));
+    });
+  }
+</script>
+</body></html>

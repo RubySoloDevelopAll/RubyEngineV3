@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Asisten AI · RubyEngine</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7c5cff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RubyEngine">
+<link rel="apple-touch-icon" href="../image/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../image/icon-192.png">
+
+<style>
+:root{
+  --bg:#0a0312;--card:rgba(255,255,255,0.05);
+  --card-solid:#1a0828;--fg:#fce7ff;--mut:#a173b8;
+  --acc:#f472b6;--acc2:#22d3ee;--acc3:#a855f7;
+  --line:rgba(244,114,182,0.18);
+  --grad:linear-gradient(135deg,#f472b6,#a855f7 50%,#22d3ee);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(244,114,182,0.18), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 30%, rgba(34,211,238,0.10), transparent),
+    radial-gradient(ellipse 70% 50% at 0% 80%, rgba(168,85,247,0.10), transparent);
+  color:var(--fg);
+  min-height:100dvh;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+
+.hdr{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px;
+  padding-top:calc(12px + env(safe-area-inset-top));
+  background:rgba(10,3,18,0.75);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+  flex-shrink:0;position:relative;z-index:10;
+}
+.back{
+  width:38px;height:38px;border-radius:12px;
+  border:1px solid var(--line);background:var(--card);
+  display:grid;place-items:center;color:var(--fg);
+  text-decoration:none;font-size:18px;flex-shrink:0;
+  transition:all .2s;
+}
+.back:active{transform:scale(.92);background:rgba(244,114,182,0.15)}
+.hdr-info{flex:1;min-width:0}
+.hdr-name{
+  font-size:14px;font-weight:800;
+  display:flex;align-items:center;gap:6px;
+  letter-spacing:-0.01em;
+}
+.hdr-name .ver{
+  font-size:9.5px;font-weight:700;
+  padding:2px 6px;border-radius:6px;
+  background:rgba(244,114,182,0.15);
+  color:var(--acc);
+  border:1px solid rgba(244,114,182,0.3);
+  letter-spacing:.04em;
+}
+.hdr-status{
+  font-size:11px;color:var(--mut);
+  display:flex;align-items:center;gap:5px;
+  margin-top:2px;
+}
+.hdr-status .dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#4ade80;
+  box-shadow:0 0 8px #4ade80;
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.hdr-avatar{
+  width:38px;height:38px;border-radius:12px;
+  background:var(--grad);
+  display:grid;place-items:center;
+  font-size:19px;flex-shrink:0;
+  box-shadow:0 0 16px rgba(244,114,182,0.4);
+  position:relative;
+}
+.hdr-avatar::after{
+  content:"";position:absolute;
+  bottom:-1px;right:-1px;
+  width:11px;height:11px;border-radius:50%;
+  background:#4ade80;border:2px solid var(--bg);
+}
+.hdr-btn{
+  width:34px;height:34px;border-radius:10px;
+  border:1px solid var(--line);background:var(--card);
+  display:grid;place-items:center;color:var(--mut);
+  font-size:15px;cursor:pointer;flex-shrink:0;
+  transition:all .2s;
+}
+.hdr-btn:active{transform:scale(.9);color:var(--fg)}
+
+.chat{
+  flex:1;overflow-y:auto;
+  padding:14px 14px 8px;
+  display:flex;flex-direction:column;gap:10px;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+}
+.chat::-webkit-scrollbar{width:4px}
+.chat::-webkit-scrollbar-thumb{background:rgba(244,114,182,0.3);border-radius:2px}
+
+.msg{
+  display:flex;gap:8px;max-width:88%;
+  animation:up .3s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.msg.bot{align-self:flex-start}
+
+.msg-av{
+  width:28px;height:28px;border-radius:9px;
+  flex-shrink:0;display:grid;place-items:center;
+  font-size:14px;
+}
+.msg.bot .msg-av{
+  background:var(--grad);
+  box-shadow:0 0 10px rgba(244,114,182,0.35);
+}
+.msg.me .msg-av{
+  background:linear-gradient(135deg,#22d3ee,#a855f7);
+}
+
+.msg-body{min-width:0;display:flex;flex-direction:column;gap:3px}
+.msg.me .msg-body{align-items:flex-end}
+
+.msg-text{
+  padding:10px 14px;
+  border-radius:16px;
+  font-size:13.5px;line-height:1.55;
+  word-break:break-word;
+  white-space:pre-wrap;
+}
+.msg.bot .msg-text{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-top-left-radius:6px;
+}
+.msg.me .msg-text{
+  background:linear-gradient(135deg,#f472b6,#a855f7);
+  color:#0a0312;font-weight:600;
+  border-top-right-radius:6px;
+}
+
+.msg-time{
+  font-size:9.5px;color:var(--mut);
+  opacity:.7;padding:0 6px;
+  letter-spacing:.02em;
+}
+
+.typing .msg-text{
+  padding:12px 16px;
+  display:flex;gap:4px;align-items:center;
+}
+.typing .msg-text .dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--mut);
+  animation:bounce 1.2s ease-in-out infinite;
+}
+.typing .msg-text .dot:nth-child(2){animation-delay:.2s}
+.typing .msg-text .dot:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-5px);opacity:1}}
+
+.chips{
+  padding:0 14px 10px;
+  display:flex;gap:6px;overflow-x:auto;
+  scrollbar-width:none;-ms-overflow-style:none;
+  flex-shrink:0;
+}
+.chips::-webkit-scrollbar{display:none}
+.chips.hide{display:none}
+.chip{
+  flex-shrink:0;
+  padding:7px 13px;border-radius:999px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--line);
+  color:var(--mut);
+  font-family:inherit;font-size:11.5px;font-weight:700;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.chip:active{transform:scale(.95)}
+.chip:hover{color:var(--acc);border-color:rgba(244,114,182,0.4)}
+
+.comp{
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(10,3,18,0.85);
+  backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  display:flex;gap:8px;align-items:center;
+  flex-shrink:0;
+}
+.comp input{
+  flex:1;height:46px;padding:0 16px;
+  border-radius:15px;
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--fg);font-size:14px;
+  font-family:inherit;
+  transition:all .2s;
+}
+.comp input::placeholder{color:var(--mut)}
+.comp input:focus{
+  outline:none;
+  border-color:rgba(244,114,182,0.5);
+  background:rgba(244,114,182,0.06);
+  box-shadow:0 0 0 3px rgba(244,114,182,0.1);
+}
+.comp button{
+  width:46px;height:46px;border-radius:15px;
+  background:var(--grad);
+  color:#0a0312;font-size:17px;
+  border:none;font-weight:800;
+  cursor:pointer;flex-shrink:0;
+  box-shadow:0 6px 20px -4px rgba(244,114,182,0.5),inset 0 1px 0 rgba(255,255,255,0.3);
+  transition:transform .15s;
+}
+.comp button:active{transform:scale(.9)}
+.comp button:disabled{opacity:.4;cursor:not-allowed}
+
+.empty{
+  flex:1;display:grid;place-items:center;
+  text-align:center;padding:40px 20px;
+  color:var(--mut);
+}
+.empty.hide{display:none}
+.empty-ic{
+  font-size:64px;margin-bottom:14px;
+  animation:float 3s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.empty-title{
+  font-size:17px;font-weight:800;
+  background:var(--grad);
+  -webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent;
+  margin-bottom:6px;letter-spacing:.02em;
+}
+.empty-sub{font-size:12.5px;line-height:1.6;max-width:280px}
+</style>
+</head>
+
+<body>
+
+<header class="hdr">
+  <a class="back" href="../apk.html">←</a>
+  <div class="hdr-avatar">🤖</div>
+  <div class="hdr-info">
+    <div class="hdr-name">Ruby AI <span class="ver">v3.0</span></div>
+    <div class="hdr-status"><span class="dot"></span>Online · Offline-first</div>
+  </div>
+  <button class="hdr-btn" id="clearBtn" title="Hapus chat">🗑️</button>
+</header>
+
+<div class="chat" id="chat">
+  <div class="empty" id="empty">
+    <div>
+      <div class="empty-ic">💬</div>
+      <div class="empty-title">Halo, aku Ruby AI</div>
+      <div class="empty-sub">Tanyakan apa saja tentang RubyEngine, minta bantuan, atau ngobrol santai.</div>
+    </div>
+  </div>
+</div>
+
+<div class="chips" id="chips">
+  <button class="chip" data-q="Apa itu RubyEngine?">✨ Apa itu RubyEngine?</button>
+  <button class="chip" data-q="Ada game apa saja?">🎮 Game apa saja?</button>
+  <button class="chip" data-q="Ada APK apa saja?">📦 APK apa saja?</button>
+  <button class="chip" data-q="Jam berapa sekarang?">⏰ Jam berapa?</button>
+  <button class="chip" data-q="Ceritakan lelucon">😄 Lelucon</button>
+  <button class="chip" data-q="12 + 5 * 3">🧮 Hitung matematika</button>
+</div>
+
+<div class="comp">
+  <input id="inp" placeholder="Tulis pesan…" autocomplete="off" maxlength="500">
+  <button id="send" disabled>➤</button>
+</div>
+
+<script src="../js/sfx.js"></script>
+<script>
+(function(){
+'use strict';
+
+// ============================================================
+// KNOWLEDGE BASE
+// ============================================================
+var KB = {
+  site: {
+    name: 'RubyEngine',
+    tagline: 'Platform kumpulan aplikasi & game ringan berbasis web',
+    desc: 'RubyEngine adalah kumpulan aplikasi utilitas dan mini-game yang bisa langsung dipakai di browser tanpa install. Semua jalan offline setelah pertama kali dibuka (PWA).',
+    counts: { apk: 16, game: 16 },
+    tech: ['PWA (Progressive Web App)', 'Offline-first', 'Ringan & cepat', 'Tanpa install', 'Gratis'],
+    apks: [
+      'Kalkulator','Kurs USD','Kalkulator Diskon','Nickname Store','Name Produk',
+      'Password Generator','Deskripsi Produk','Asisten AI','Timer','Kalkulator BBM',
+      'Age Calculator','Spin Wheel','Judol Simulator','MBG Calculator','Creator Studio','Rubik Solver'
+    ],
+    games: [
+      'Snake','Star Run','Tebak Angka','Block Blast','Flappy Bird','Tic Tac Toe',
+      'MTK Question','Space Shooter','Memory Card','Coin Clicker','Ping Pong','Air Hockey',
+      'Billiard','Chess','Bubble Shooter','Rubik'
+    ]
+  },
+  jokes: [
+    'Kenapa programmer suka kopi? Karena tanpa Java, hidup terasa kurang kompilasi. ☕',
+    'Kenapa WiFi putus nyambung terus? Dia lagi cari jati diri. 📶',
+    'Kenapa HP nggak pernah bohong? Karena kalau bohong, langsung "not responding". 📱',
+    'Apa bedanya kamu dan bug? Bug bisa diperbaiki. 😏',
+    'Kenapa matahari nggak pernah telat? Karena dia selalu terbit on time. ☀️',
+    'Kenapa air nggak pernah stres? Karena dia selalu mengalir. 💧',
+    'Apa yang dikatakan 0 ke 8? Keren, sabukmu bagus! 🎽',
+    'Kenapa sepatu lari cepat? Karena dia punya "soles". 👟',
+    'Kenapa pensil gak pernah bosan? Karena dia selalu punya poin. ✏️'
+  ],
+  facts: [
+    'Tahukah kamu? PWA bisa jalan offline tanpa install, hampir seperti app native. 📱',
+    'Fakta: kode JavaScript pertama dibuat hanya dalam 10 hari pada tahun 1995. ⚡',
+    'Tahukah kamu? Nama "bug" berasal dari ngengat asli yang nemu di komputer tahun 1947. 🐛',
+    'Fakta: warna "hijau" paling mudah dilihat mata manusia dibanding warna lain. 👁️',
+    'Tahukah kamu? HTTP status 418 artinya "I\'m a teapot" — beneran ada di spesifikasi. 🫖'
+  ],
+  quotes: [
+    '"Kesuksesan bukan akhir, kegagalan bukan hal fatal." — Winston Churchill',
+    '"Satu-satunya cara untuk melakukan pekerjaan hebat adalah mencintai apa yang kamu lakukan." — Steve Jobs',
+    '"Jangan tunggu sempurna. Mulai saja dulu." — Unknown',
+    '"Setiap expert pernah jadi pemula." — Unknown',
+    '"Kode yang bagus adalah kode yang mudah dibaca." — Martin Fowler'
+  ]
+};
+
+// ============================================================
+// REWRITE ENGINE
+// ============================================================
+var STYLE_KEYS = {
+  keren:    ['keren','kece','cool','gaya','trendy','modern','kekinian','gaul'],
+  puitis:   ['puitis','puisi','indah','sastrawi','romantis','menyentuh'],
+  formal:   ['formal','resmi','baku','profesional','serius'],
+  santai:   ['santai','casual','santuy','rileks','adem'],
+  mudah:    ['mudah dipahami','jelas','gampang','simpel','sederhana','mudah dimengerti','mudah di pahami'],
+  singkat:  ['singkat','pendek','padat','brief','ringkas'],
+  panjang:  ['panjang','detail','lengkap','mendalam'],
+  lucu:     ['lucu','humor','funny','receh','garing','jokes','becanda'],
+  dramatis: ['dramatis','dramatic','epic','heroik','megah']
+};
+
+var REWRITE_TRIGGERS = [
+  'buatlah','bikin jadi','bikin lebih','jadikan','jadikan lebih',
+  'ubah jadi','ubah ke','ubah','ganti jadi','ganti ke',
+  'parafrase','paraphrase','tulis ulang','perbaiki','edit',
+  'buat jadi','buat lebih','ubah teks'
+];
+
+function detectRewrite(input){
+  var lower = input.toLowerCase();
+  var triggerIdx = -1;
+
+  REWRITE_TRIGGERS.forEach(function(t){
+    var idx = lower.indexOf(t);
+    if(idx > 0 && (triggerIdx === -1 || idx < triggerIdx)){
+      triggerIdx = idx;
+    }
+  });
+
+  if(triggerIdx === -1) return null;
+
+  var content = input.slice(0, triggerIdx).trim();
+  content = content.replace(/[.,;:\-]+\s*$/, '').trim();
+  if(content.length < 3) return null;
+
+  var styles = [];
+  Object.keys(STYLE_KEYS).forEach(function(style){
+    var kws = STYLE_KEYS[style];
+    for(var i = 0; i < kws.length; i++){
+      if(lower.indexOf(kws[i]) !== -1){ styles.push(style); break; }
+    }
+  });
+
+  return { content: content, styles: styles };
+}
+
+function transformText(content, styles){
+  var r = content.trim().replace(/\s+/g, ' ');
+  if(r) r = r.charAt(0).toUpperCase() + r.slice(1);
+
+  if(styles.indexOf('formal') !== -1){
+    r = r.replace(/\bada\b/gi,'terdapat')
+         .replace(/\bdan\b/gi,'serta')
+         .replace(/\btapi\b/gi,'namun')
+         .replace(/\bbanyak\b/gi,'berbagai')
+         .replace(/\bbikin\b/gi,'menciptakan')
+         .replace(/\bkayak\b/gi,'seperti')
+         .replace(/\bsama\b/gi,'dengan');
+  }
+
+  if(styles.indexOf('santai') !== -1){
+    r = r.replace(/\bterdapat\b/gi,'ada')
+         .replace(/\bserta\b/gi,'dan')
+         .replace(/\bnamun\b/gi,'tapi')
+         .replace(/\bmenciptakan\b/gi,'bikin');
+    if(!/[!?]$/.test(r)) r = r.replace(/\.$/, ' nih.');
+  }
+
+  if(styles.indexOf('puitis') !== -1){
+    r = r.replace(/\bada\b/gi,'tersaji')
+         .replace(/\bkopi\b/gi,'kopi yang mengepul hangat')
+         .replace(/\bcangkir\b/gi,'cangkir yang bisu');
+    if(!/🌸|✨/.test(r)) r += '\n\nBetapa sederhana, namun penuh makna. 🌸';
+  }
+
+  if(styles.indexOf('keren') !== -1){
+    if(!/^(🌟|✨|🔥)/.test(r)) r = '🌟 ' + r;
+    r = r.replace(/\bada\b/i, 'ada nih');
+    if(!/✨🔥$/.test(r)) r += ' ✨🔥';
+  }
+
+  if(styles.indexOf('mudah') !== -1){
+    r = r.replace(/,\s+/g, '.\n')
+         .replace(/([.!?])\s+(?=[A-Z])/g, '$1\n');
+  }
+
+  if(styles.indexOf('singkat') !== -1){
+    var m = r.match(/^[^.!?\n]+[.!?]?/);
+    if(m) r = m[0].trim();
+  }
+
+  if(styles.indexOf('panjang') !== -1){
+    r += '\n\n' + content + ' — setiap detail punya makna tersendiri. Gambaran kecil ini bisa jadi jauh lebih hidup kalau kita mau melihatnya lebih dekat.';
+  }
+
+  if(styles.indexOf('lucu') !== -1){
+    if(!/😂|😄|🤣/.test(r)) r += ' 😂';
+  }
+
+  if(styles.indexOf('dramatis') !== -1){
+    r = '✨ ' + r + '\n\n...dan di situlah kisahnya dimulai. 💫';
+  }
+
+  if(styles.length === 0){
+    r = r.replace(/\s+/g, ' ');
+    if(!/[.!?]$/.test(r)) r += '.';
+  }
+
+  return r;
+}
+  
+  // ============================================================
+// INTENTS
+// ============================================================
+var INTENTS = [
+  {
+    id: 'rewrite',
+    patterns: [
+      /buatlah teks/i, /ubah teks/i, /parafrase/i, /tulis ulang/i,
+      /perbaiki teks/i, /jadikan lebih/i, /buat.*(lebih|jadi)/i,
+      /bikin.*(lebih|jadi)/i, /ubah jadi/i, /ganti jadi/i
+    ],
+    keywords: ['buatlah','jadikan','ubah','parafrase','tulis ulang','perbaiki','edit'],
+    weight: 20,
+    dynamic: function(input){
+      var req = detectRewrite(input);
+      if(!req) return null;
+      var out = transformText(req.content, req.styles);
+
+      var styleLabel = req.styles.length
+        ? 'Gaya: ' + req.styles.map(function(s){ return '**' + s + '**'; }).join(' + ')
+        : 'Dipoles sedikit biar lebih rapi';
+
+      return '✨ Ini versi yang lebih ' + (req.styles.length ? req.styles.join(' + ') : 'rapi') + ':\n\n' +
+             '"' + out + '"\n\n' +
+             '_(' + styleLabel + ')_';
+    }
+  },
+
+  {
+    id: 'greeting',
+    patterns: [/^(halo|hai|hi|hello|hey|hei|woi|euy)\b/i],
+    keywords: ['halo','hai','hello','hi','hey'],
+    weight: 10,
+    replies: [
+      'Halo juga! 👋 Ada yang bisa aku bantu?',
+      'Hai! 😊 Mau ngobrol apa hari ini?',
+      'Halo! Senang ketemu kamu. Ada yang bisa dibantu?',
+      'Hey! 👋 Tanya apa saja ya.'
+    ]
+  },
+
+  {
+    id: 'howru',
+    patterns: [/apa kabar|gimana kabar|kabarmu|how are you/i],
+    weight: 10,
+    replies: [
+      'Aku baik! 😊 Makasih udah nanya. Kamu gimana?',
+      'Selalu semangat! Kamu sendiri apa kabar?',
+      'Baik dong! Gimana harimu sejauh ini?'
+    ]
+  },
+
+  {
+    id: 'bot_name',
+    patterns: [/siapa kamu|kamu siapa|nama (kamu|mu|kalian)|what.*your name|kamu bot apa/i],
+    weight: 10,
+    replies: [
+      'Aku Ruby AI — asisten virtual dari RubyEngine. 🤖',
+      'Namaku Ruby AI, siap bantu kamu kapan saja! ✨',
+      'Aku Ruby AI, asisten offline RubyEngine. Senang berkenalan! 👋'
+    ]
+  },
+
+  {
+    id: 'website',
+    patterns: [
+      /nama (web|situs|aplikasi|app|website).*(ini|apa)/i,
+      /(web|situs|website|app|aplikasi).*(ini|apa).*(nama|namanya)/i,
+      /ini (web|situs|aplikasi).*apa/i,
+      /rubyengine/i,
+      /apa (itu|ini) (web|situs|rubyengine)/i,
+      /tentang (web|situs|rubyengine).*(ini|apa)/i
+    ],
+    keywords: ['rubyengine','nama web','nama situs','nama website','web ini apa','situs ini','tentang web'],
+    weight: 15,
+    replies: [
+      'Web ini namanya **RubyEngine**! 🚀\n\n' + KB.site.tagline + '. Di dalamnya ada ' + KB.site.counts.apk + ' aplikasi dan ' + KB.site.counts.game + ' mini-game yang bisa langsung dipakai tanpa install.\n\nSemua jalan offline setelah pertama kali dibuka. Keren kan? 😎',
+      'Namanya **RubyEngine** ✨\n\nPlatform yang ngumpulin aplikasi ringan + game seru dalam satu tempat. Bisa diakses langsung dari browser, tanpa install, dan tetap jalan offline. Ada ' + KB.site.counts.apk + ' APK dan ' + KB.site.counts.game + ' game siap dipakai!',
+      'Ini **RubyEngine** — rumah untuk ' + KB.site.counts.apk + ' aplikasi & ' + KB.site.counts.game + ' game ringan berbasis web. 🌐\n\nFilosofinya: bikin hal-hal simpel jadi lebih mudah diakses. Tinggal buka, langsung pakai.'
+    ]
+  },
+
+  {
+    id: 'capabilities',
+    patterns: [/bisa apa|kamu bisa|what can you do|kemampuan|fitur kamu|apa yang bisa/i],
+    keywords: ['bisa apa','kamu bisa','kemampuanmu','fitur kamu'],
+    weight: 10,
+    replies: [
+      'Aku bisa:\n\n• 💬 Ngobrol santai\n• ✍️ Parafrase teks (contoh: "Di sana ada kopi dan cangkir. Buatlah lebih puitis")\n• ⏰ Kasih waktu & tanggal\n• 🧮 Hitung matematika sederhana\n• 📚 Cerita soal RubyEngine — game, APK, fitur\n• 😄 Ceritakan lelucon\n• 💡 Kasih fakta menarik atau quote\n\nCoba tanya apa saja!',
+      'Kemampuanku:\n\n✍️ Mengubah gaya tulisan (keren, puitis, formal, dll)\n⚡ Jawab pertanyaan tentang RubyEngine\n🧮 Hitung matematika (contoh: 25 * 4)\n⏰ Info waktu & tanggal\n😄 Lelucon, fakta, quote\n💬 Ngobrol ringan\n\nApa yang mau kamu coba dulu?'
+    ]
+  },
+
+  {
+    id: 'games',
+    patterns: [/game apa|ada game|list game|daftar game|main apa/i],
+    keywords: ['game apa','daftar game','list game','game saja','mini game'],
+    weight: 12,
+    replies: [
+      'RubyEngine punya **' + KB.site.counts.game + ' game** seru! 🎮\n\n' + KB.site.games.join(' · ') + '\n\nDari yang klasik (Snake, Chess) sampai modern (Star Run, Rubik 3D). Mau yang mana?',
+      'Game di RubyEngine ada ' + KB.site.counts.game + ':\n\n' + KB.site.games.slice(0,8).join(', ') + ', dan masih banyak lagi!\n\nSemua bisa langsung dimainkan — tanpa download. 🎮',
+      'Pilihan game-nya lengkap! 🎯\n\n' + KB.site.games.join(' · ') + '\n\nTinggal pilih yang paling seru menurutmu!'
+    ]
+  },
+
+  {
+    id: 'apks',
+    patterns: [/apk apa|ada apk|list apk|daftar apk|aplikasi apa|tools apa/i],
+    keywords: ['apk apa','daftar apk','list apk','aplikasi apa','tools'],
+    weight: 12,
+    replies: [
+      'Ada **' + KB.site.counts.apk + ' APK/aplikasi** di RubyEngine: 📦\n\n' + KB.site.apks.join(' · ') + '\n\nSemua bisa langsung dipakai di browser!',
+      'Daftar aplikasinya:\n\n' + KB.site.apks.slice(0,10).join(', ') + ', dll.\n\nTotal ' + KB.site.counts.apk + ' aplikasi. Mau yang mana? 📦',
+      'RubyEngine punya ' + KB.site.counts.apk + ' aplikasi ringan:\n\n' + KB.site.apks.join(' · ') + '\n\nCocok buat produktivitas & hiburan sehari-hari. ✨'
+    ]
+  },
+
+  {
+    id: 'features',
+    patterns: [/fitur apa|kelebihan|keunggulan|kenapa.*(bagus|keren)|apa istimewa/i],
+    keywords: ['fitur apa','kelebihan','keunggulan','kenapa bagus'],
+    weight: 10,
+    replies: [
+      'Kelebihan RubyEngine:\n\n✨ ' + KB.site.tech.join('\n✨ ') + '\n\nSimpel, ringan, dan bisa dipakai kapan saja — bahkan tanpa internet! 📱',
+      'Yang bikin RubyEngine beda:\n\n🌐 Berbasis web (tinggal buka)\n📴 Bisa offline (PWA)\n⚡ Ringan & cepat\n🆓 100% gratis\n📦 ' + KB.site.counts.apk + ' APK + ' + KB.site.counts.game + ' game\n\nGak perlu install, gak perlu daftar. 👍'
+    ]
+  },
+
+  {
+    id: 'time',
+    patterns: [/jam berapa|sekarang jam|what time|waktu sekarang/i],
+    keywords: ['jam berapa','waktu','jam sekarang'],
+    weight: 10,
+    dynamic: function(){
+      var d = new Date();
+      var h = d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+      return '⏰ Sekarang pukul **' + h + '** WIB.\n\nAda jadwal penting hari ini?';
+    }
+  },
+
+  {
+    id: 'date',
+    patterns: [/tanggal berapa|hari apa|sekarang tanggal|what.*date|today/i],
+    keywords: ['tanggal berapa','hari apa','tanggal sekarang'],
+    weight: 10,
+    dynamic: function(){
+      var d = new Date();
+      var tgl = d.toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+      return '📅 Hari ini **' + tgl + '**.\n\nSemoga harimu produktif! ✨';
+    }
+  },
+
+  {
+    id: 'math',
+    patterns: [/\d+\s*[\+\-\*\/x×÷]\s*\d+/i, /hitung/i, /berapa hasil/i],
+    keywords: ['hitung','hasil dari'],
+    weight: 11,
+    dynamic: function(input){
+      var expr = input
+        .toLowerCase()
+        .replace(/x|×/g, '*')
+        .replace(/÷/g, '/')
+        .replace(/[^0-9+\-*/().\s]/g, '')
+        .trim();
+      if(!expr || !/\d/.test(expr)) return null;
+      try{
+        var result = Function('"use strict";return (' + expr + ')')();
+        if(typeof result === 'number' && isFinite(result)){
+          var display = Number.isInteger(result) ? result : Math.round(result * 10000) / 10000;
+          return '🧮 **' + expr + ' = ' + display + '**\n\nAda lagi yang mau dihitung?';
+        }
+      }catch(e){}
+      return null;
+    }
+  },
+
+  {
+    id: 'joke',
+    patterns: [/lelucon|joke|lucu|garing|cerita lucu|becandaan/i],
+    keywords: ['lelucon','joke','lucu','garing'],
+    weight: 10,
+    replies: KB.jokes
+  },
+
+  {
+    id: 'fact',
+    patterns: [/fakta|tahukah kamu|fun fact|info menarik/i],
+    keywords: ['fakta','fun fact','info menarik'],
+    weight: 10,
+    replies: KB.facts
+  },
+
+  {
+    id: 'quote',
+    patterns: [/quote|kata mutiara|motivasi|kata bijak/i],
+    keywords: ['quote','motivasi','kata mutiara','kata bijak'],
+    weight: 10,
+    replies: KB.quotes
+  },
+
+  {
+    id: 'thanks',
+    patterns: [/terima kasih|makasih|thanks|thx|tq/i],
+    keywords: ['makasih','terima kasih','thanks'],
+    weight: 10,
+    replies: [
+      'Sama-sama! 😊 Senang bisa bantu.',
+      'Siap! Kalau ada yang lain, tanya saja ya. ✨',
+      'You\'re welcome! 🙌',
+      'Gak masalah, itu tugasku! 💪'
+    ]
+  },
+
+  {
+    id: 'bye',
+    patterns: [/bye|selamat tinggal|sampai jumpa|dadah|see you|goodbye/i],
+    keywords: ['bye','sampai jumpa','dadah'],
+    weight: 10,
+    replies: [
+      'Sampai jumpa! 👋 Jangan lupa balik ya.',
+      'Bye! Semoga harimu menyenangkan. ✨',
+      'Dadah! Sampai ketemu lagi. 😊'
+    ]
+  },
+
+  {
+    id: 'weather',
+    patterns: [/cuaca|hujan|panas|dingin|weather/i],
+    keywords: ['cuaca','hujan','panas'],
+    weight: 8,
+    replies: [
+      'Aku belum bisa cek cuaca real-time, tapi semoga cuaca di sana cerah ya! ☀️',
+      'Sayangnya aku offline — gak bisa akses info cuaca. Tapi semoga harimu adem. 🌤️'
+    ]
+  },
+
+  {
+    id: 'bored',
+    patterns: [/bosan|bosen|gabut|males|bete/i],
+    keywords: ['bosan','bosen','gabut'],
+    weight: 10,
+    replies: [
+      'Gabut ya? 😅 Coba mampir ke tab **Game** — ada 16 game ringan yang bisa langsung dimainkan. Star Run atau Rubik 3D seru lho! 🎮',
+      'Bosen? Cobain **Spin Wheel** di daftar APK, atau main **Snake**. Bisa jadi penyelamat waktu luang. 😄',
+      'Kalau gabut, coba tanya aku hal random. Atau minta lelucon — tinggal ketik "lelucon". 😎'
+    ]
+  },
+
+  {
+    id: 'tired',
+    patterns: [/capek|lelah|letih|ngantuk|penat/i],
+    keywords: ['capek','lelah','letih','penat'],
+    weight: 10,
+    replies: [
+      'Capek itu wajar. Istirahat dulu, minum air, tarik napas. Kamu udah kerja cukup keras hari ini. 🌿',
+      'Semangat! Kadang yang dibutuhkan cuma 5 menit jeda. Coba dengerin lagu favorit atau lihat langit sebentar. ☁️',
+      'Kalau capek, gak apa-apa berhenti sebentar. Produktivitas bukan lomba sprint. 💙'
+    ]
+  },
+
+  {
+    id: 'sad',
+    patterns: [/sedih|galau|down|nangis|murung/i],
+    keywords: ['sedih','galau','down'],
+    weight: 10,
+    replies: [
+      'Aku di sini. 🤍 Kadang perasaan berat itu cuma perlu ditemani, bukan diselesaikan buru-buru.',
+      'Gak apa-apa sedih. Hari buruk bukan berarti hidup yang buruk. Besok masih ada kesempatan baru. 🌤️',
+      'Kalau mau cerita, aku siap dengar. Kalau mau diem juga gak apa-apa. Yang penting kamu jaga diri sendiri. 💙'
+    ]
+  },
+
+  {
+    id: 'help',
+    patterns: [/tolong|bantu aku|help me|bisa bantu/i],
+    keywords: ['tolong','bantu'],
+    weight: 9,
+    replies: [
+      'Tentu! Ceritakan apa yang mau kamu bantu. 💬\n\nKalau bingung mulai, coba tanya:\n• "Apa itu RubyEngine?"\n• "Ada game apa?"\n• "Jam berapa sekarang?"\n• "Di sana ada kopi. Buatlah lebih puitis"',
+      'Siap bantu! 💪 Tanya apa saja soal RubyEngine, minta parafrase teks, atau hitung matematika.'
+    ]
+  }
+];
+  
+  // ============================================================
+// INTENT MATCHING — score-based
+// ============================================================
+function detectIntent(input){
+  var text = input.trim();
+  var best = null;
+  var bestScore = 0;
+
+  INTENTS.forEach(function(intent){
+    var score = 0;
+
+    if(intent.patterns){
+      for(var i = 0; i < intent.patterns.length; i++){
+        if(intent.patterns[i].test(text)){
+          score += intent.weight * 2;
+          break;
+        }
+      }
+    }
+
+    if(intent.keywords){
+      var lower = text.toLowerCase();
+      for(var j = 0; j < intent.keywords.length; j++){
+        if(lower.indexOf(intent.keywords[j]) !== -1){
+          score += intent.weight;
+          break;
+        }
+      }
+    }
+
+    if(score > bestScore){
+      bestScore = score;
+      best = intent;
+    }
+  });
+
+  return bestScore >= 8 ? best : null;
+}
+
+// ============================================================
+// RESPONSE GENERATOR
+// ============================================================
+var _recent = [];
+function pickUnique(arr){
+  if(!arr || !arr.length) return '';
+  if(arr.length === 1) return arr[0];
+  var avail = arr.filter(function(x){ return _recent.indexOf(x) === -1; });
+  if(!avail.length) avail = arr;
+  var picked = avail[Math.floor(Math.random() * avail.length)];
+  _recent.push(picked);
+  if(_recent.length > 4) _recent.shift();
+  return picked;
+}
+
+function generateResponse(input){
+  var intent = detectIntent(input);
+
+  if(intent){
+    if(intent.dynamic){
+      var dyn = intent.dynamic(input);
+      if(dyn) return dyn;
+    }
+    if(intent.replies && intent.replies.length){
+      return pickUnique(intent.replies);
+    }
+  }
+
+  return fallback(input);
+}
+
+function fallback(input){
+  var lower = input.toLowerCase().trim();
+
+  if(/teks|tulisan|kalimat|paragraf/i.test(lower) &&
+     /(buat|ubah|perbaiki|edit|jadikan|ganti)/i.test(lower)){
+    return 'Sepertinya kamu mau aku mengubah teks ya? ✍️\n\nCoba tulis dengan format:\n"[teks kamu]. Buatlah lebih keren"\n\nContoh: "Di sana ada kopi dan cangkir. Buatlah lebih puitis dan mudah dipahami"';
+  }
+
+  if(/\b(apk|aplikasi|tools?)\b/i.test(lower)){
+    return pickUnique([
+      'Soal aplikasi ya? RubyEngine punya 16 APK ringan — dari kalkulator sampai Rubik Solver. Ketik "ada APK apa saja?" biar aku list lengkapnya. 📦',
+      'Aplikasi di RubyEngine ada 16. Coba tanya "daftar APK" atau "ada tools apa?" biar aku jelasin. ✨'
+    ]);
+  }
+  if(/\b(game|main|play|gaming)\b/i.test(lower)){
+    return pickUnique([
+      'Soal game ya? Ada 16 game di RubyEngine. Coba tanya "ada game apa?" biar aku kasih list-nya. 🎮',
+      'Game di RubyEngine banyak! Dari Snake, Chess, sampai Rubik 3D. Ketik "daftar game" ya. 🎯'
+    ]);
+  }
+  if(/\b(web|situs|website|aplikasi ini|rubyengine)\b/i.test(lower)){
+    return pickUnique([
+      'Ini **RubyEngine** — platform kumpulan aplikasi & game ringan berbasis web. Tanya "apa itu RubyEngine?" biar aku jelasin lengkap. 🌐',
+      'Soal web-nya? Web ini namanya RubyEngine. Ada 16 APK + 16 game, semua jalan offline. Mau tahu lebih? Tanya aja. ✨'
+    ]);
+  }
+
+  if(/\?\s*$/.test(input)){
+    return pickUnique([
+      'Hmm, aku belum paham maksud pertanyaannya. 🤔 Coba tanya soal RubyEngine, minta hitung matematika, atau minta aku parafrase sebuah teks.',
+      'Maaf, pertanyaan itu di luar kemampuanku. 🙏 Tapi aku bisa bantu: parafrase teks, hitung-hitungan, atau info soal RubyEngine.',
+      'Aku belum bisa jawab yang itu. Coba topik lain — misal "ceritakan lelucon" atau "buat teks ini lebih keren". 😊'
+    ]);
+  }
+
+  return pickUnique([
+    'Hmm, aku belum paham. Kalau mau, coba tulis lebih lengkap — misalnya "Buatlah teks ini lebih keren: [teks kamu]". ✍️',
+    'Bisa diperjelas? Aku paling jago soal: parafrase teks, hitung-hitungan, dan info RubyEngine. 💬',
+    'Aku belum nangkep maksudnya. Tapi kalau ada teks yang mau dipercantik, tinggal kirim — nanti aku olah. ✨',
+    'Oke. Ada yang bisa aku bantu? Misalnya mengubah gaya tulisan, atau hitung sesuatu? 😊'
+  ]);
+}
+
+// ============================================================
+// UI LOGIC
+// ============================================================
+var chatEl = document.getElementById('chat');
+var emptyEl = document.getElementById('empty');
+var chipsEl = document.getElementById('chips');
+var inpEl = document.getElementById('inp');
+var sendBtn = document.getElementById('send');
+var clearBtn = document.getElementById('clearBtn');
+
+var history = [];
+var STORAGE_KEY = 'ruby_ai_history_v3';
+var MAX_HISTORY = 50;
+
+function nowTime(){
+  var d = new Date();
+  return d.getHours().toString().padStart(2,'0') + ':' +
+         d.getMinutes().toString().padStart(2,'0');
+}
+
+function renderMessage(text, who, opts){
+  opts = opts || {};
+
+  if(emptyEl) emptyEl.classList.add('hide');
+
+  var msg = document.createElement('div');
+  msg.className = 'msg ' + who;
+
+  var avatar = document.createElement('div');
+  avatar.className = 'msg-av';
+  avatar.textContent = who === 'bot' ? '🤖' : '🙂';
+
+  var body = document.createElement('div');
+  body.className = 'msg-body';
+
+  var txt = document.createElement('div');
+  txt.className = 'msg-text';
+  txt.textContent = text;
+
+  var time = document.createElement('div');
+  time.className = 'msg-time';
+  time.textContent = opts.time || nowTime();
+
+  body.appendChild(txt);
+  if(!opts.noTime) body.appendChild(time);
+
+  msg.appendChild(avatar);
+  msg.appendChild(body);
+  chatEl.appendChild(msg);
+
+  requestAnimationFrame(function(){
+    chatEl.scrollTop = chatEl.scrollHeight;
+  });
+
+  return msg;
+}
+
+var typingEl = null;
+function showTyping(){
+  if(typingEl) return;
+  typingEl = document.createElement('div');
+  typingEl.className = 'msg bot typing';
+  typingEl.innerHTML =
+    '<div class="msg-av">🤖</div>' +
+    '<div class="msg-body">' +
+      '<div class="msg-text"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>' +
+    '</div>';
+  chatEl.appendChild(typingEl);
+  requestAnimationFrame(function(){
+    chatEl.scrollTop = chatEl.scrollHeight;
+  });
+}
+function hideTyping(){
+  if(typingEl){
+    typingEl.remove();
+    typingEl = null;
+  }
+}
+
+function sendMessage(text){
+  text = (text || '').trim();
+  if(!text) return;
+
+  if(window.SFX && SFX.tap) SFX.tap();
+
+  renderMessage(text, 'me');
+  pushHistory({ who: 'me', text: text, time: nowTime() });
+
+  inpEl.value = '';
+  sendBtn.disabled = true;
+
+  showTyping();
+  var delay = 400 + Math.random() * 600 + Math.min(text.length * 15, 800);
+
+  setTimeout(function(){
+    hideTyping();
+    var reply = generateResponse(text);
+    renderMessage(reply, 'bot');
+    pushHistory({ who: 'bot', text: reply, time: nowTime() });
+    if(window.SFX && SFX.ok) SFX.ok();
+  }, delay);
+}
+
+function pushHistory(item){
+  history.push(item);
+  if(history.length > MAX_HISTORY) history.shift();
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); }catch(e){}
+}
+
+function loadHistory(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    var arr = JSON.parse(raw);
+    if(!Array.isArray(arr) || !arr.length) return;
+
+    history = arr;
+    arr.forEach(function(item){
+      renderMessage(item.text, item.who, { time: item.time, noTime: false });
+    });
+  }catch(e){}
+}
+
+clearBtn.addEventListener('click', function(){
+  if(!confirm('Hapus semua percakapan?')) return;
+  chatEl.innerHTML = '';
+  if(emptyEl){
+    emptyEl.classList.remove('hide');
+    chatEl.appendChild(emptyEl);
+  }
+  history = [];
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  if(window.SFX && SFX.tap) SFX.tap();
+});
+
+chipsEl.addEventListener('click', function(e){
+  var chip = e.target.closest('.chip');
+  if(!chip) return;
+  var q = chip.getAttribute('data-q');
+  if(!q) return;
+  sendMessage(q);
+  chipsEl.classList.add('hide');
+});
+
+inpEl.addEventListener('input', function(){
+  sendBtn.disabled = !inpEl.value.trim();
+});
+
+inpEl.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    if(inpEl.value.trim()) sendMessage(inpEl.value);
+  }
+});
+
+sendBtn.addEventListener('click', function(){
+  if(inpEl.value.trim()) sendMessage(inpEl.value);
+});
+  
+  loadHistory();
+
+if(!history.length){
+  setTimeout(function(){
+    var welcome = 'Halo! 👋 Aku **Ruby AI**, asisten offline dari RubyEngine.\n\n' +
+      'Aku bisa bantu soal:\n' +
+      '• 🌐 Info tentang RubyEngine\n' +
+      '• 🎮 Daftar game & APK\n' +
+      '• ✍️ Parafrase teks (contoh: "Di sana ada kopi. Buatlah lebih puitis")\n' +
+      '• 🧮 Hitung matematika\n' +
+      '• ⏰ Waktu & tanggal\n' +
+      '• 😄 Lelucon, fakta, quote\n\n' +
+      'Coba tap salah satu tombol di atas, atau langsung tanya saja! ✨';
+    renderMessage(welcome, 'bot');
+    pushHistory({ who: 'bot', text: welcome, time: nowTime() });
+  }, 500);
+}
+
+if(window.matchMedia('(pointer:fine)').matches){
+  setTimeout(function(){ inpEl.focus(); }, 700);
+}
+
+})();
+</script>
+
+<!-- ============ PWA ============ -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('../sw.js', { scope: '../' })
+        .then(reg => console.log('[PWA] SW registered:', reg.scope))
+        .catch(err => console.warn('[PWA] SW failed:', err));
+    });
+  }
+</script>
+</body></html>

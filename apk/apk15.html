@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Creator Studio · RubyEngine</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#a855f7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RubyEngine">
+<link rel="apple-touch-icon" href="../image/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../image/icon-192.png">
+
+<style>
+:root{
+  --bg:#0a0518;--card:rgba(255,255,255,0.04);--card-solid:#170e2e;
+  --fg:#f5f0ff;--mut:#8b7bb8;
+  --acc:#a855f7;--acc2:#ec4899;--acc3:#22d3ee;
+  --line:rgba(168,85,247,0.16);
+  --grad:linear-gradient(135deg,#a855f7,#ec4899);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(168,85,247,0.22), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(236,72,153,0.14), transparent),
+    radial-gradient(ellipse 70% 50% at 10% 80%, rgba(34,211,238,0.08), transparent);
+  color:var(--fg);
+  min-height:100dvh;
+  padding:14px;
+  padding-top:calc(14px + env(safe-area-inset-top));
+  padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  overflow-x:hidden;
+}
+
+/* TOP */
+.top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.back{
+  width:42px;height:42px;border-radius:14px;
+  border:1px solid var(--line);
+  background:var(--card);backdrop-filter:blur(10px);
+  display:grid;place-items:center;color:var(--fg);
+  text-decoration:none;font-size:20px;flex-shrink:0;
+  transition:all .2s;
+}
+.back:active{transform:scale(.92);background:rgba(168,85,247,0.15)}
+.title-wrap{display:flex;flex-direction:column;gap:2px}
+.title{
+  font-size:17px;font-weight:800;letter-spacing:-0.01em;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent;
+}
+.subtitle{font-size:11px;color:var(--mut);letter-spacing:.06em;font-weight:600;text-transform:uppercase}
+
+/* TABS */
+.tabs{
+  display:flex;gap:6px;overflow-x:auto;
+  scrollbar-width:none;-ms-overflow-style:none;
+  margin-bottom:14px;padding-bottom:4px;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{
+  flex-shrink:0;padding:9px 14px;border-radius:12px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  color:var(--mut);
+  font-family:inherit;font-size:12.5px;font-weight:700;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.tabs button:active{transform:scale(.96)}
+.tabs button.on{
+  background:var(--grad);
+  color:#0a0518;border-color:transparent;
+  font-weight:800;
+  box-shadow:0 6px 20px -4px rgba(168,85,247,0.5);
+}
+
+/* PANEL */
+.panel{display:none}
+.panel.on{display:block;animation:fadeUp .3s cubic-bezier(.4,0,.2,1)}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:none}
+}
+
+/* CARD */
+.card{
+  background:var(--card);backdrop-filter:blur(14px);
+  border:1px solid var(--line);border-radius:18px;
+  padding:16px;margin-bottom:12px;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(400px circle at 50% 0%, rgba(168,85,247,0.08), transparent 60%);
+  pointer-events:none;
+}
+
+/* FORM */
+.f{margin-bottom:12px;position:relative;z-index:1}
+.f:last-child{margin-bottom:0}
+.f label{
+  display:block;font-size:11px;color:var(--mut);
+  margin-bottom:6px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.f input,.f select,.f textarea{
+  width:100%;padding:13px 14px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  color:var(--fg);font-size:14px;
+  font-family:inherit;font-weight:600;
+  transition:all .2s;
+}
+.f select{
+  appearance:none;cursor:pointer;
+  padding-right:36px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b7bb8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+}
+.f select option{background:#170e2e;color:var(--fg)}
+.f input:focus,.f select:focus,.f textarea:focus{
+  outline:none;border-color:rgba(168,85,247,0.5);
+  background:rgba(168,85,247,0.06);
+  box-shadow:0 0 0 4px rgba(168,85,247,0.10);
+}
+.f input::placeholder,.f textarea::placeholder{color:var(--mut);font-weight:400}
+.f textarea{resize:vertical;min-height:56px;line-height:1.5}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:360px){.row{grid-template-columns:1fr}}
+
+/* CHIPS */
+.chips{
+  display:flex;gap:8px;overflow-x:auto;
+  padding-bottom:4px;
+  scrollbar-width:none;-ms-overflow-style:none;
+  position:relative;z-index:1;
+}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex-shrink:0;padding:8px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  color:var(--mut);
+  font-family:inherit;font-size:12px;font-weight:700;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.chip:active{transform:scale(.95)}
+.chip.active{
+  background:rgba(168,85,247,0.15);
+  border-color:rgba(168,85,247,0.5);
+  color:var(--acc);
+  box-shadow:0 0 18px rgba(168,85,247,0.25);
+}
+
+/* BUTTON */
+.go{
+  width:100%;padding:15px;border-radius:14px;
+  background:var(--grad);
+  color:#0a0518;font-size:14.5px;font-weight:800;
+  letter-spacing:.03em;
+  border:none;font-family:inherit;cursor:pointer;
+  box-shadow:0 10px 30px -8px rgba(168,85,247,0.55),
+             inset 0 1px 0 rgba(255,255,255,0.3);
+  transition:transform .15s, box-shadow .2s;
+  margin-bottom:12px;
+  position:relative;overflow:hidden;
+}
+.go::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg, rgba(255,255,255,0.28), transparent 55%);
+  pointer-events:none;
+}
+.go:active{
+  transform:scale(.97);
+  box-shadow:0 4px 16px -4px rgba(168,85,247,0.6);
+}
+
+/* RESULT */
+.res{
+  padding:16px;border-radius:14px;
+  background:rgba(255,255,255,0.035);
+  border:1px solid var(--line);
+  font-size:13.5px;line-height:1.7;
+  white-space:pre-wrap;word-break:break-word;
+  color:var(--fg);min-height:60px;
+  max-height:60vh;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  position:relative;
+}
+.res::-webkit-scrollbar{width:4px}
+.res::-webkit-scrollbar-thumb{background:rgba(168,85,247,0.3);border-radius:2px}
+.res:empty::before{content:'Hasil akan muncul di sini…';color:var(--mut)}
+
+/* LIST */
+.list{display:flex;flex-direction:column;gap:8px}
+.it{
+  padding:12px 14px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.035);
+  border:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  animation:up .3s cubic-bezier(.4,0,.2,1) both;
+  transition:all .2s;
+}
+.it:hover{border-color:rgba(168,85,247,0.35);background:rgba(168,85,247,0.06)}
+@keyframes up{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:none}
+}
+.it>span{
+  flex:1;font-size:13px;font-weight:600;
+  line-height:1.45;word-break:break-word;
+}
+.it>span small{
+  display:block;margin-top:3px;
+  color:var(--mut);font-size:11.5px;font-weight:500;
+}
+.it button{
+  flex-shrink:0;
+  padding:7px 12px;border-radius:9px;
+  background:rgba(168,85,247,0.12);
+  border:1px solid rgba(168,85,247,0.3);
+  color:var(--acc);
+  font-family:inherit;font-size:11px;font-weight:800;
+  letter-spacing:.04em;cursor:pointer;
+  transition:all .2s;min-width:56px;
+}
+.it button:active{transform:scale(.94)}
+.it button.ok{
+  background:rgba(61,220,132,0.15);
+  color:#3ddc84;
+  border-color:rgba(61,220,132,0.4);
+}
+.it button.del{
+  background:rgba(244,114,182,0.12);
+  color:#f472b6;
+  border-color:rgba(244,114,182,0.3);
+  min-width:auto;padding:7px 10px;
+}
+
+/* COPY FAB */
+.cp-fab{
+  position:absolute;top:10px;right:10px;
+  width:34px;height:34px;border-radius:10px;
+  background:rgba(168,85,247,0.15);
+  border:1px solid rgba(168,85,247,0.35);
+  color:var(--acc);
+  display:grid;place-items:center;
+  cursor:pointer;font-family:inherit;font-size:14px;
+  transition:all .2s;
+  backdrop-filter:blur(8px);
+  z-index:2;
+}
+.cp-fab:active{transform:scale(.9)}
+.cp-fab.ok{
+  background:rgba(61,220,132,0.18);
+  border-color:rgba(61,220,132,0.5);
+  color:#3ddc84;
+}
+
+/* STAT BOX */
+.stat-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;margin-bottom:12px;
+}
+.stat-box{
+  padding:14px;border-radius:12px;
+  background:rgba(255,255,255,0.035);
+  border:1px solid var(--line);
+}
+.stat-box .lbl{
+  font-size:10.5px;color:var(--mut);
+  font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;margin-bottom:4px;
+}
+.stat-box .val{
+  font-size:20px;font-weight:800;
+  color:var(--fg);
+  font-variant-numeric:tabular-nums;
+}
+.stat-box .val.acc{color:var(--acc)}
+.stat-box .val.pink{color:var(--acc2)}
+.stat-box .val.cyan{color:var(--acc3)}
+
+.progress{
+  height:8px;border-radius:4px;
+  background:rgba(255,255,255,0.06);
+  overflow:hidden;margin:8px 0 14px;
+}
+.progress-bar{
+  height:100%;border-radius:4px;
+  background:var(--grad);
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+}
+
+/* ORB */
+.orb{
+  position:fixed;border-radius:50%;
+  filter:blur(80px);pointer-events:none;
+  opacity:.4;z-index:-1;
+}
+.orb1{width:220px;height:220px;background:#a855f7;top:-70px;left:-70px}
+.orb2{width:170px;height:170px;background:#ec4899;top:45%;right:-80px}
+.orb3{width:150px;height:150px;background:#22d3ee;bottom:-50px;left:15%}
+</style>
+</head><body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="top">
+  <a class="back" href="../apk.html">←</a>
+  <div class="title-wrap">
+    <div class="title">Creator Studio</div>
+    <div class="subtitle">Alat Konten Kreator</div>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="on" data-t="idea">💡 Ide</button>
+  <button data-t="hook">🪝 Hook</button>
+  <button data-t="cap">📝 Caption</button>
+  <button data-t="tag">#️⃣ Hashtag</button>
+  <button data-t="script">📋 Script</button>
+  <button data-t="plan">📅 Planner</button>
+  <button data-t="stat">📊 Stats</button>
+</div>
+
+<!-- ========== IDE ========== -->
+<div class="panel on" data-p="idea">
+  <div class="card">
+    <div class="f">
+      <label>Niche / Topik</label>
+      <input id="iNiche" placeholder="contoh: gaming, kuliner, edukasi…" autocomplete="off">
+    </div>
+    <div class="row">
+      <div class="f" style="margin-bottom:0">
+        <label>Format</label>
+        <select id="iFmt">
+          <option value="video">🎬 Video Panjang</option>
+          <option value="shorts">📱 Shorts / Reels</option>
+          <option value="tiktok">🎵 TikTok</option>
+          <option value="carousel">🖼️ Carousel</option>
+        </select>
+      </div>
+      <div class="f" style="margin-bottom:0">
+        <label>Gaya</label>
+        <select id="iStyle">
+          <option value="edukasi">📚 Edukasi</option>
+          <option value="hiburan">🎉 Hiburan</option>
+          <option value="review">⭐ Review</option>
+          <option value="viral">🔥 Viral</option>
+          <option value="story">📖 Story</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <button class="go" id="iGo">✨ Generate 12 Ide</button>
+  <div class="list" id="iOut"></div>
+</div>
+
+<!-- ========== HOOK ========== -->
+<div class="panel" data-p="hook">
+  <div class="card">
+    <div class="f">
+      <label>Topik Video</label>
+      <input id="hTopic" placeholder="contoh: cara belajar cepat…" autocomplete="off">
+    </div>
+    <div class="f">
+      <label>Gaya Hook</label>
+      <div class="chips" id="hChips">
+        <button class="chip active" data-v="story">📖 Storytelling</button>
+        <button class="chip" data-v="edu">📚 Edukasi</button>
+        <button class="chip" data-v="viral">🔥 Viral</button>
+        <button class="chip" data-v="quest">❓ Pertanyaan</button>
+        <button class="chip" data-v="shock">😱 Shock</button>
+        <button class="chip" data-v="relate">💭 Relate</button>
+      </div>
+    </div>
+  </div>
+  <button class="go" id="hGo">✨ Generate 10 Hook</button>
+  <div class="list" id="hOut"></div>
+</div>
+
+<!-- ========== CAPTION ========== -->
+<div class="panel" data-p="cap">
+  <div class="card">
+    <div class="f">
+      <label>Topik Konten</label>
+      <input id="cTopic" placeholder="contoh: resep nasi goreng…" autocomplete="off">
+    </div>
+    <div class="f">
+      <label>Gaya Caption</label>
+      <div class="chips" id="cChips">
+        <button class="chip active" data-v="short">⚡ Pendek</button>
+        <button class="chip" data-v="story">📖 Story</button>
+        <button class="chip" data-v="moti">💪 Motivasi</button>
+        <button class="chip" data-v="fun">😄 Fun</button>
+        <button class="chip" data-v="soft">🌸 Soft</button>
+        <button class="chip" data-v="hard">🔥 Hard</button>
+      </div>
+    </div>
+  </div>
+  <button class="go" id="cGo">✨ Generate Caption</button>
+  <div style="position:relative">
+    <button class="cp-fab" id="cCp" type="button">📋</button>
+    <div class="res" id="cOut"></div>
+  </div>
+</div>
+
+<!-- ========== HASHTAG ========== -->
+<div class="panel" data-p="tag">
+  <div class="card">
+    <div class="f">
+      <label>Niche</label>
+      <input id="tNiche" placeholder="contoh: gaming, kuliner…" autocomplete="off">
+    </div>
+    <div class="f">
+      <label>Platform</label>
+      <div class="chips" id="tChips">
+        <button class="chip active" data-v="ig">📸 Instagram</button>
+        <button class="chip" data-v="tt">🎵 TikTok</button>
+        <button class="chip" data-v="yt">▶️ YouTube Shorts</button>
+        <button class="chip" data-v="fb">👍 Facebook</button>
+      </div>
+    </div>
+  </div>
+  <button class="go" id="tGo">✨ Generate 25 Hashtag</button>
+  <div style="position:relative">
+    <button class="cp-fab" id="tCp" type="button">📋</button>
+    <div class="res" id="tOut"></div>
+  </div>
+</div>
+
+<!-- ========== SCRIPT ========== -->
+<div class="panel" data-p="script">
+  <div class="card">
+    <div class="f">
+      <label>Topik Video</label>
+      <input id="scTopic" placeholder="contoh: 5 tips produktif…" autocomplete="off">
+    </div>
+    <div class="f">
+      <label>Tipe Script</label>
+      <div class="chips" id="scChips">
+        <button class="chip active" data-v="edukasi">📚 Edukasi</button>
+        <button class="chip" data-v="vlog">📹 Vlog</button>
+        <button class="chip" data-v="tutorial">🔧 Tutorial</button>
+        <button class="chip" data-v="review">⭐ Review</button>
+        <button class="chip" data-v="story">📖 Story</button>
+      </div>
+    </div>
+  </div>
+  <button class="go" id="scGo">✨ Generate Script</button>
+  <div style="position:relative">
+    <button class="cp-fab" id="scCp" type="button">📋</button>
+    <div class="res" id="scOut"></div>
+  </div>
+</div>
+
+<!-- ========== PLANNER ========== -->
+<div class="panel" data-p="plan">
+  <div class="card">
+    <div class="f">
+      <label>Judul Konten</label>
+      <input id="pTitle" placeholder="contoh: Review gadget baru…" autocomplete="off">
+    </div>
+    <div class="row">
+      <div class="f" style="margin-bottom:0">
+        <label>Tanggal</label>
+        <input id="pDate" type="date">
+      </div>
+      <div class="f" style="margin-bottom:0">
+        <label>Status</label>
+        <select id="pStat">
+          <option>💡 Idea</option>
+          <option>✏️ Draft</option>
+          <option>🎬 Editing</option>
+          <option>📅 Scheduled</option>
+          <option>✅ Published</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <button class="go" id="pGo">+ Tambah ke Planner</button>
+  <div class="list" id="pOut"></div>
+</div>
+
+<!-- ========== STATS ========== -->
+<div class="panel" data-p="stat">
+  <div class="card">
+    <div class="row">
+      <div class="f" style="margin-bottom:0">
+        <label>Video Upload</label>
+        <input id="sVid" type="number" value="0" min="0">
+      </div>
+      <div class="f" style="margin-bottom:0">
+        <label>Target</label>
+        <input id="sTgt" type="number" value="30" min="1">
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div class="f" style="margin-bottom:0">
+        <label>Streak (hari)</label>
+        <input id="sStreak" type="number" value="0" min="0">
+      </div>
+      <div class="f" style="margin-bottom:0">
+        <label>Views Total</label>
+        <input id="sViews" type="number" value="0" min="0">
+      </div>
+    </div>
+  </div>
+  <button class="go" id="sGo">📊 Hitung Statistik</button>
+  <div id="sStats"></div>
+</div>
+
+<script src="../js/sfx.js"></script>
+  
+  <script src="../js/sfx.js"></script>
+<script>
+(function(){
+'use strict';
+
+// ============== UTILS ==============
+function R(a){ return a[Math.floor(Math.random()*a.length)] }
+function RI(min, max){ return Math.floor(Math.random()*(max-min+1))+min }
+function esc(s){ return String(s||'').replace(/[<>]/g,'') }
+function unique(arr){
+  var seen={}, out=[];
+  arr.forEach(function(x){ if(!seen[x]){ seen[x]=1; out.push(x); } });
+  return out;
+}
+function copyText(txt, btn, orig){
+  var done = function(){
+    btn.textContent = '✓';
+    btn.classList.add('ok');
+    if(window.SFX && SFX.pickup) SFX.pickup();
+    setTimeout(function(){
+      btn.textContent = orig;
+      btn.classList.remove('ok');
+    }, 1300);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(done);
+  } else {
+    try{
+      var ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }catch(e){}
+    done();
+  }
+}
+
+// ============== TABS ==============
+document.getElementById('tabs').addEventListener('click', function(e){
+  var b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#tabs button').forEach(function(x){ x.classList.remove('on') });
+  b.classList.add('on');
+  document.querySelectorAll('.panel').forEach(function(p){
+    p.classList.toggle('on', p.dataset.p === b.dataset.t);
+  });
+  if(window.SFX && SFX.tap) SFX.tap();
+});
+
+// Chip helper (dipakai semua tab)
+function bindChips(id){
+  var box = document.getElementById(id);
+  if(!box) return;
+  box.addEventListener('click', function(e){
+    var c = e.target.closest('.chip'); if(!c) return;
+    box.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('active') });
+    c.classList.add('active');
+    if(window.SFX && SFX.tap) SFX.tap();
+  });
+}
+
+// ============================================================
+// ================ IDE GENERATOR (150+ kombinasi) ============
+// ============================================================
+var IDE_TPL = {
+  video: [
+    '{num} {adj} {topic} yang Wajib Kamu Tahu',
+    'Panduan Lengkap {topic} untuk Pemula',
+    'Review Jujur: {topic} vs Kompetitor',
+    'Kisah Sukses dari Dunia {topic}',
+    '{num} Rahasia {topic} yang Jarang Diketahui',
+    'Kesalahan Fatal Pemula di {topic}',
+    'Before vs After: Transformasi {topic}',
+    'Studi Kasus: {topic} yang Viral',
+    'Analisa Mendalam: Kenapa {topic} Begitu Populer?',
+    'Eksperimen {topic} Selama 30 Hari',
+    '{num} Mitos {topic} yang Harus Dibongkar',
+    'Dari Nol Sampai Mahir {topic}',
+    'Perbandingan {num} Metode {topic}',
+    'Tips Pro {topic} dari Ahli'
+  ],
+  shorts: [
+    '{topic} dalam 30 detik!',
+    'POV: Kamu Baru Tahu {topic}',
+    '{num} Fakta {topic} yang Bikin Kaget',
+    'Before vs After {topic}',
+    '{topic} Hack yang Harus Kamu Coba',
+    'Stop! Jangan Lakukan {topic} Sebelum Lihat Ini',
+    'Trik {topic} Level Dewa',
+    '{topic} vs {topic} — Mana yang Lebih Baik?',
+    'Reaksi Pertama Coba {topic}',
+    '{num} Detik Paham {topic}',
+    'Jangan Skip! Ini Penting soal {topic}',
+    'Cara Cepat Kuasai {topic}'
+  ],
+  tiktok: [
+    'POV: Kamu Lagi {topic}',
+    'Jangan Skip! {topic} Ini Penting',
+    'Trend {topic} yang Lagi Viral',
+    'React ke {topic} Challenge',
+    'Cerita Horor tentang {topic}',
+    'Kalau Kamu Suka {topic}, Tonton Ini',
+    '{topic} di 2026 Bakal Gini',
+    '{num} Hal yang Gak Ada yang Kasih Tahu soal {topic}',
+    'Aku Coba {topic} Selama Seminggu',
+    'Duet Yuk! Soal {topic}',
+    'Rate {topic} dari 1-10',
+    'Tebak! Ini {topic} Apa?'
+  ],
+  carousel: [
+    '{num} Slide yang Ubah Cara Kamu Lihat {topic}',
+    'Swipe! {num} Tips {topic}',
+    'Infografis: {topic} dalam 5 Menit',
+    'Cheatsheet {topic} untuk Pemula',
+    'Checklist {topic} Sebelum Mulai',
+    '{num} Kesalahan {topic} + Solusinya',
+    'Rangkuman {topic} Minggu Ini',
+    'Mind Map {topic} Lengkap',
+    'Kutipan Motivasi soal {topic}',
+    'Data & Statistik {topic} Terbaru'
+  ]
+};
+
+var IDE_ADJ = {
+  edukasi: ['Terbukti','Ilmiah','Efektif','Praktis','Teruji'],
+  hiburan: ['Seru','Lucu','Gokil','Bikin Nagih','Hilarious'],
+  review: ['Jujur','Objektif','Mendalam','Netral','Realistis'],
+  viral: ['Viral','Trending','FYP','Hits','Wajib Tonton'],
+  story: ['Inspiratif','Menyentuh','Relate','Real','Personal']
+};
+
+var NUM_WORDS = ['3','5','7','10','12','15'];
+var EMOJI_IDEA = ['💡','🔥','✨','🎯','⭐','🚀','💎','🌟','⚡','🎬'];
+
+document.getElementById('iGo').addEventListener('click', function(){
+  var topic = esc(document.getElementById('iNiche').value.trim()) || 'konten';
+  var fmt = document.getElementById('iFmt').value;
+  var style = document.getElementById('iStyle').value;
+  var out = document.getElementById('iOut');
+  out.innerHTML = '';
+
+  var used = {}, count = 0, attempts = 0;
+  var frag = document.createDocumentFragment();
+
+  while(count < 12 && attempts < 200){
+    attempts++;
+    var tpl = R(IDE_TPL[fmt] || IDE_TPL.video);
+    var adj = R(IDE_ADJ[style] || IDE_ADJ.edukasi);
+    var num = R(NUM_WORDS);
+    var txt = tpl
+      .replace(/\{topic\}/g, topic)
+      .replace(/\{num\}/g, num)
+      .replace(/\{adj\}/g, adj);
+    if(used[txt]) continue;
+    used[txt] = 1;
+
+    var final = R(EMOJI_IDEA) + ' ' + txt;
+    var el = document.createElement('div');
+    el.className = 'it';
+    el.style.animationDelay = (count * 30) + 'ms';
+    el.innerHTML = '<span></span><button>Copy</button>';
+    el.querySelector('span').textContent = final;
+    (function(f, b){ b.addEventListener('click', function(){ copyText(f, b, 'Copy'); }); })(final, el.querySelector('button'));
+    frag.appendChild(el);
+    count++;
+  }
+  out.appendChild(frag);
+  if(window.SFX && SFX.win) SFX.win();
+});
+
+// ============================================================
+// ================ HOOK GENERATOR (120+ kombinasi) ===========
+// ============================================================
+var HOOK_TPL = {
+  story: [
+    'Jujur, aku nggak nyangka ini kejadian sama aku…',
+    '3 tahun lalu aku gagal total. Sekarang?',
+    'Ada satu momen yang mengubah hidupku:',
+    'Aku hampir menyerah. Tapi…',
+    'Kamu pernah nggak sih ngerasa stuck banget?',
+    'Ceritanya begini — dan ini nyata.',
+    'Aku salah. Serius, aku salah besar soal {t}.',
+    'Gak ada yang percaya sama aku soal {t}.',
+    'Ini cerita yang gak pernah aku share sebelumnya.',
+    'Semua berawal dari satu kesalahan kecil.'
+  ],
+  edu: [
+    'Tahukah kamu bahwa {t} itu sebenarnya sederhana?',
+    'Stop! Sebelum kamu lakukan {t}, tonton ini dulu.',
+    'Ini cara cepat belajar {t} dalam 5 menit.',
+    'Rumus rahasia {t} yang tidak diajarkan di sekolah.',
+    '3 langkah mudah menguasai {t}.',
+    'Fakta {t} yang bahkan ahli jarang tahu.',
+    '{t} bukan tentang bakat — tapi tentang metode.',
+    'Kalau kamu paham ini, {t} jadi gampang.',
+    'Penjelasan {t} paling jelas yang pernah kamu dengar.',
+    '{t} itu 90% pola pikir, 10% teknik.'
+  ],
+  viral: [
+    'Kamu nggak akan percaya apa yang terjadi dengan {t}…',
+    'POV: kamu baru tahu tentang {t}',
+    'Ini yang nggak ada yang kasih tahu soal {t}!',
+    'Jangan skip! {t} ini bakal ubah cara kamu lihat segalanya.',
+    'WARNING: {t} bisa bikin kamu ketagihan!',
+    'FYP jangan skip! Ini soal {t}.',
+    'Aku gak nyangka ini bakal viral.',
+    'Detik 0-3 ini bakal nge-hook kamu.',
+    'Ini alasan kenapa {t} lagi rame banget.',
+    '{t} = game changer. Serius.'
+  ],
+  quest: [
+    'Pernah nggak sih kamu mikir: kenapa {t} bisa begitu?',
+    'Apa yang bakal kamu lakukan kalau tahu rahasia {t}?',
+    'Coba tebak — apa yang bikin {t} beda?',
+    'Kamu tim yang mana: pro {t} atau kontra?',
+    'Kalau boleh pilih satu skill soal {t}, kamu pilih apa?',
+    'Berapa lama kamu bisa bertahan tanpa {t}?',
+    'Apa hal tersulit dari {t} menurut kamu?',
+    'Kamu pernah salah paham soal {t}?',
+    'Kalau {t} bisa diubah, kamu mau apa?',
+    'Kamu sadar gak sih soal {t}?'
+  ],
+  shock: [
+    'JANGAN pernah lakukan ini saat {t}!',
+    'Ternyata selama ini kita salah soal {t}.',
+    'Fakta ini bakal bikin kamu syok:',
+    'Ini alasan sebenarnya kenapa {t} sering gagal.',
+    '9 dari 10 orang salah paham soal {t}.',
+    'Aku kaget waktu tahu faktanya.',
+    'Yang kamu tahu soal {t} cuma 10% saja.',
+    'Ini bikin aku sleepless night.',
+    'STOP pakai cara lama untuk {t}.',
+    'Kenyataan soal {t} jauh lebih rumit.'
+  ],
+  relate: [
+    'Kalau kamu pernah ngerasa gagal di {t}, ini buat kamu.',
+    'POV: kamu capek banget dengan {t}.',
+    'Aku tahu rasanya struggle dengan {t}.',
+    'Kamu gak sendiri — aku juga pernah di posisi ini.',
+    'Ini buat kamu yang lagi berjuang dengan {t}.',
+    'Kalau kamu relate, save dulu.',
+    'Kita semua pernah di titik terendah soal {t}.',
+    'Aku ngerti perasaanmu, dan aku di sini.',
+    'Ini reminder buat kamu yang mau nyerah di {t}.',
+    'Save ini buat hari-hari beratmu.'
+  ]
+};
+
+var EMOJI_HOOK = ['🔥','😱','👀','💡','✨','🎯','⚡','💥','🚨','💭'];
+
+document.getElementById('hGo').addEventListener('click', function(){
+  var topic = esc(document.getElementById('hTopic').value.trim()) || 'topik ini';
+  var styleChip = document.querySelector('#hChips .chip.active');
+  var style = styleChip ? styleChip.dataset.v : 'story';
+  var out = document.getElementById('hOut');
+  out.innerHTML = '';
+
+  var used = {}, count = 0, attempts = 0;
+  var frag = document.createDocumentFragment();
+
+  while(count < 10 && attempts < 150){
+    attempts++;
+    var tpl = R(HOOK_TPL[style] || HOOK_TPL.story);
+    var txt = tpl.replace(/\{t\}/g, topic);
+    if(used[txt]) continue;
+    used[txt] = 1;
+
+    var final = R(EMOJI_HOOK) + ' ' + txt;
+    var el = document.createElement('div');
+    el.className = 'it';
+    el.style.animationDelay = (count * 30) + 'ms';
+    el.innerHTML = '<span></span><button>Copy</button>';
+    el.querySelector('span').textContent = final;
+    (function(f, b){ b.addEventListener('click', function(){ copyText(f, b, 'Copy'); }); })(final, el.querySelector('button'));
+    frag.appendChild(el);
+    count++;
+  }
+  out.appendChild(frag);
+  if(window.SFX && SFX.win) SFX.win();
+});
+
+// Bind chip interaksi
+bindChips('hChips');
+bindChips('cChips');
+bindChips('tChips');
+bindChips('scChips');
+  
+  // ============================================================
+// ================ CAPTION GENERATOR (100+ kombinasi) ========
+// ============================================================
+var CAP = {
+  short: {
+    open: ['✨ {t} ✨','🔥 {t}','💫 {t}','⚡ {t}','🎯 {t}'],
+    body: ['Kalian wajib coba!','Worth banget!','Jangan skip!','FYP dong!','Rec banget!'],
+    close: ['','#shorts #viral','#fyp','#rekomendasi']
+  },
+  story: {
+    open: ['Awalnya aku ragu…','Gak ada yang percaya sama aku…','Aku hampir nyerah…','Cerita singkat:','3 tahun lalu, aku gagal.'],
+    body: ['Tapi setelah coba {t}, semuanya berubah.','Ternyata {t} bukan tentang bakat, tapi konsistensi.','Pelajari {t} beneran ubah hidupku.','Setiap hari aku belajar {t}, dan hasilnya nyata.'],
+    close: ['Kalau kamu di posisi yang sama — jangan menyerah. 💪','Percaya deh, {t} itu bisa di-kuasai siapa aja.','Ini bukti bahwa {t} bukan cuma teori.']
+  },
+  moti: {
+    open: ['🚀 {t}','💪 {t}','⚡ {t}','🔥 {t}','✨ {t}'],
+    body: ['Setiap langkah kecil adalah progres.','Jangan bandingkan prosesmu dengan orang lain.','Fokus, konsisten, percaya diri.','Kamu lebih kuat dari yang kamu kira.','Kerja keras gak akan bohong.','Mulai dari sekarang, bukan nanti.'],
+    close: ['Semangat ya! 💪✨','Kamu pasti bisa!','Keep going! 🔥']
+  },
+  fun: {
+    open: ['POV: kamu lagi {t} 😂','Aku dan {t} = satu paket 📦','Kalau {t} jadi orang, dia...','Aku sama {t} kayak...','Bestie, {t} ini gimana ya?'],
+    body: ['Jujur ini lucu banget sih 😂','Level: 100/10 recommend','Aku ketawa sendiri 😭','Gak nyangka doang','Plot twist: ternyata oke!'],
+    close: ['Comment kalau kamu relate! 👇','Tag temenmu! 🏷️','Save dulu nanti ketawa lagi 😂']
+  },
+  soft: {
+    open: ['🌸 {t}','🌿 {t}','✨ {t}','💫 {t}'],
+    body: ['Ada sesuatu yang tenang dari {t}.','Pelan-pelan tapi pasti.','Setiap hal indah butuh waktu.','Nikmati prosesnya.','Ini pengingat lembut untukmu.'],
+    close: ['Semoga harimu menyenangkan 🤍','Take your time, no rush 🌸']
+  },
+  hard: {
+    open: ['STOP! 🚨','JANGAN SKIP! ⚡','PERHATIAN! 🔥','BACA DULU! 💥'],
+    body: ['Ini soal {t} dan kamu harus tahu.','9 dari 10 orang salah paham soal {t}.','Kalau kamu masih pakai cara lama, UBAH SEKARANG.','Faktanya, {t} jauh lebih gampang dari yang kamu kira.'],
+    close: ['SAVE sebelum hilang! 📌','SHARE ke yang butuh! 🔥','KOMENTAR kalau setuju! 👇']
+  }
+};
+
+document.getElementById('cGo').addEventListener('click', function(){
+  var topic = esc(document.getElementById('cTopic').value.trim()) || 'konten ini';
+  var styleChip = document.querySelector('#cChips .chip.active');
+  var style = styleChip ? styleChip.dataset.v : 'short';
+  var C = CAP[style] || CAP.short;
+
+  var open = R(C.open).replace(/\{t\}/g, topic);
+  var body = R(C.body).replace(/\{t\}/g, topic);
+  var close = R(C.close).replace(/\{t\}/g, topic);
+  var out = open + '\n\n' + body + (close ? '\n\n' + close : '');
+
+  document.getElementById('cOut').textContent = out;
+  if(window.SFX && SFX.ok) SFX.ok();
+});
+
+document.getElementById('cCp').addEventListener('click', function(){
+  var t = document.getElementById('cOut').textContent;
+  if(!t) return;
+  copyText(t, this, '📋');
+});
+
+// ============================================================
+// ================ HASHTAG GENERATOR (ribuan kombinasi) ======
+// ============================================================
+var TAG_BASE = {
+  ig: ['fyp','viral','trending','reels','instagood','explore','reelsinstagram','instadaily','instavideo','explorepage'],
+  tt: ['fyp','foryou','foryoupage','viral','trending','tiktokindonesia','xyzbca','tiktokviral','tiktokfyp','samasama'],
+  yt: ['youtubeshorts','shorts','shortsindonesia','shortsvideo','youtubechannel','subscribe','viral','trending'],
+  fb: ['fb','facebookreels','fbreels','viralvideo','trending','fyp','fypage','reelsfb']
+};
+var TAG_GENERAL = ['contentcreator','kreator','kreatorindonesia','tips','belajar','daily','vibes','aesthetic','recomended','wajibtonton','viralvideo','trending2026'];
+
+document.getElementById('tGo').addEventListener('click', function(){
+  var niche = esc(document.getElementById('tNiche').value.trim()).toLowerCase().replace(/\s+/g,'');
+  var platChip = document.querySelector('#tChips .chip.active');
+  var plat = platChip ? platChip.dataset.v : 'ig';
+  if(!niche) niche = 'creator';
+
+  var pool = [];
+  pool.push('#'+niche);
+  pool.push('#'+niche+'indonesia');
+  pool.push('#'+niche+'viral');
+  pool.push('#'+niche+'fyp');
+  pool.push('#'+niche+'lover');
+  pool.push('#'+niche+'daily');
+  pool.push('#'+niche+'tips');
+  pool.push('#'+niche+'check');
+  pool.push('#'+niche+'update');
+  pool.push('#'+niche+'content');
+
+  (TAG_BASE[plat] || TAG_BASE.ig).forEach(function(t){ pool.push('#'+t); });
+  TAG_GENERAL.forEach(function(t){ pool.push('#'+t); });
+
+  pool = unique(pool);
+
+  var selected = [];
+  var copy = pool.slice();
+  while(selected.length < 25 && copy.length){
+    var idx = RI(0, copy.length-1);
+    selected.push(copy[idx]);
+    copy.splice(idx, 1);
+  }
+
+  document.getElementById('tOut').textContent = selected.join(' ');
+  if(window.SFX && SFX.ok) SFX.ok();
+});
+
+document.getElementById('tCp').addEventListener('click', function(){
+  var t = document.getElementById('tOut').textContent;
+  if(!t) return;
+  copyText(t, this, '📋');
+});
+
+// ============================================================
+// ================ SCRIPT GENERATOR (100+ kombinasi) =========
+// ============================================================
+var SCRIPT_BANK = {
+  edukasi: {
+    hook: ['Stop! Kalau kamu penasaran soal {t}, tonton sampai habis.','Aku bakal bahas {t} dari nol sampai paham.','Ini penjelasan {t} paling jelas yang pernah kamu dengar.','Ternyata {t} itu sederhana, kalau tahu caranya.'],
+    intro: ['Halo semuanya! Di video kali ini aku bakal bahas {t} secara lengkap.','Welcome back! Hari ini topik kita: {t}.','Hai creators! Kali ini kita ngulik soal {t}.'],
+    body: ['Poin pertama: pengenalan dasar {t} dan kenapa itu penting.','Poin kedua: langkah praktis yang bisa langsung kamu terapkan.','Poin ketiga: kesalahan umum yang harus kamu hindari.','Poin keempat: tips lanjutan untuk hasil maksimal.'],
+    cta: ['Kalau bermanfaat, like & subscribe ya!','Share ke temanmu yang butuh ini.','Tulis pengalamanmu di komentar.'],
+    outro: ['Sampai jumpa di video berikutnya. Bye!','See you next time! Jangan lupa subscribe.','Thanks udah nonton, sampai ketemu lagi!']
+  },
+  vlog: {
+    hook: ['Hari ini aku bakal share soal {t} dari sisi personal.','Vlog kali ini spesial — kita ngobrolin {t}.','Cerita hari ini tentang {t}, semoga relate.'],
+    intro: ['Hai guys, welcome back to my vlog!','Hari ini kita bakal jalan-jalan sambil bahas {t}.','Kalian udah siap? Kita mulai!'],
+    body: ['Pagi ini aku mulai dengan rutinitas singkat soal {t}.','Siang hari, aku coba pendekatan baru.','Ada momen yang bikin aku ngerti kenapa {t} penting.','Dan di akhir hari, aku refleksi soal ini.'],
+    cta: ['Kalau suka, drop like ya!','Komentar pengalamanmu juga ya!','Subscribe buat vlog berikutnya.'],
+    outro: ['Sampai ketemu di vlog berikutnya!','Bye bye!','Thanks for watching, see you!']
+  },
+  tutorial: {
+    hook: ['Hari ini aku bakal ajarin kamu cara melakukan {t} step-by-step.','Ikuti tutorial {t} ini sampai selesai, dijamin bisa.','Mudah banget! Ini cara melakukan {t}.'],
+    intro: ['Hai semuanya! Welcome to tutorial {t}.','Siapkan alat & bahan, kita mulai.','Langsung saja ya, ini langkahnya.'],
+    body: ['Step 1: persiapan — pastikan kamu punya semua yang dibutuhkan.','Step 2: mulai dari dasar, jangan skip langkah ini.','Step 3: bagian yang paling tricky, tapi tenang — aku jelasin pelan-pelan.','Step 4: finishing dan tips supaya hasilnya rapi.'],
+    cta: ['Kalau berhasil, tag aku di story ya!','Save video ini buat latihan!','Komentar kalau ada yang mau ditanyakan.'],
+    outro: ['Sampai jumpa di tutorial berikutnya!','Selamat mencoba, sampai ketemu lagi!']
+  },
+  review: {
+    hook: ['Aku bakal review {t} dengan jujur — tanpa drama.','Review {t} setelah aku pakai 30 hari.','Ini verdict final soal {t}.'],
+    intro: ['Hai semua, welcome to another review.','Hari ini aku bahas {t} lengkap plus minusnya.','Disclaimer: ini review jujur, bukan sponsored.'],
+    body: ['Kelebihan pertama: kualitas yang oke banget.','Kelebihan kedua: harga yang masuk akal.','Kekurangan: ada beberapa hal yang bisa lebih baik.','Perbandingan dengan kompetitor terdekat.'],
+    cta: ['Menurut kamu gimana? Comment di bawah.','Kalau bermanfaat, like & share.','Subscribe untuk review berikutnya!'],
+    outro: ['Sampai jumpa di review selanjutnya!','Thanks for watching!']
+  },
+  story: {
+    hook: ['Ada cerita di balik {t} yang jarang orang tahu.','Ini kisah nyataku soal {t}.','3 tahun lalu, aku memulai perjalanan dengan {t}.'],
+    intro: ['Halo semuanya, izinkan aku berbagi cerita.','Cerita kali ini personal banget buat aku.','Aku harap cerita ini menginspirasi kamu.'],
+    body: ['Semua dimulai ketika aku pertama kali kenal {t}.','Ada masa di mana aku gagal berkali-kali.','Tapi setiap kegagalan ngajarin aku sesuatu.','Sampai akhirnya, aku menemukan caranya.'],
+    cta: ['Kalau kamu di posisi yang sama, jangan menyerah.','Share cerita ini ke yang butuh.','Komentar ceritamu juga ya.'],
+    outro: ['Sampai jumpa di cerita berikutnya.','Terima kasih sudah mendengarkan.']
+  }
+};
+var SCRIPT_EMOJI = {
+  hook: ['🪝','🎣','🎯'],
+  intro: ['🎬','👋','📢'],
+  body: ['📚','📝','🎯'],
+  cta: ['📣','💬','🔔'],
+  outro: ['👋','🎬','✨']
+};
+
+document.getElementById('scGo').addEventListener('click', function(){
+  var topic = esc(document.getElementById('scTopic').value.trim()) || 'topik ini';
+  var chip = document.querySelector('#scChips .chip.active');
+  var style = chip ? chip.dataset.v : 'edukasi';
+  var B = SCRIPT_BANK[style] || SCRIPT_BANK.edukasi;
+
+  var out = '📋 SCRIPT: ' + topic.toUpperCase() + '\n\n';
+
+  out += R(SCRIPT_EMOJI.hook) + ' HOOK (0-5s):\n';
+  out += '"' + R(B.hook).replace(/\{t\}/g, topic) + '"\n\n';
+
+  out += R(SCRIPT_EMOJI.intro) + ' INTRO (5-15s):\n';
+  out += '"' + R(B.intro).replace(/\{t\}/g, topic) + '"\n\n';
+
+  out += R(SCRIPT_EMOJI.body) + ' ISI:\n';
+  var bodyPool = B.body.slice();
+  var bodyCount = Math.min(4, bodyPool.length);
+  for(var i = 0; i < bodyCount; i++){
+    var idx = RI(0, bodyPool.length - 1);
+    out += '• ' + bodyPool[idx].replace(/\{t\}/g, topic) + '\n';
+    bodyPool.splice(idx, 1);
+  }
+  out += '\n';
+
+  out += R(SCRIPT_EMOJI.cta) + ' CTA:\n';
+  out += '"' + R(B.cta).replace(/\{t\}/g, topic) + '"\n\n';
+
+  out += R(SCRIPT_EMOJI.outro) + ' OUTRO:\n';
+  out += '"' + R(B.outro).replace(/\{t\}/g, topic) + '"';
+
+  document.getElementById('scOut').textContent = out;
+  if(window.SFX && SFX.ok) SFX.ok();
+});
+
+document.getElementById('scCp').addEventListener('click', function(){
+  var t = document.getElementById('scOut').textContent;
+  if(!t) return;
+  copyText(t, this, '📋');
+});
+
+// ============================================================
+// ================ PLANNER (localStorage) ====================
+// ============================================================
+var PLAN_KEY = 'creator_studio_planner';
+var planner = [];
+try{ planner = JSON.parse(localStorage.getItem(PLAN_KEY) || '[]'); }catch(e){ planner = []; }
+
+function savePlanner(){
+  try{ localStorage.setItem(PLAN_KEY, JSON.stringify(planner)); }catch(e){}
+}
+
+function renderPlanner(){
+  var box = document.getElementById('pOut');
+  box.innerHTML = '';
+  if(!planner.length){
+    box.innerHTML = '<div class="it" style="color:#8b7bb8;justify-content:center;font-size:12.5px">📭 Belum ada konten. Tambahkan di atas.</div>';
+    return;
+  }
+  planner.forEach(function(p, i){
+    var el = document.createElement('div');
+    el.className = 'it';
+    el.style.animationDelay = (i * 30) + 'ms';
+    el.innerHTML = '<span></span><button class="del">✕</button>';
+    var span = el.querySelector('span');
+    span.innerHTML = '<b>' + p.t + '</b><small>' + (p.d || '-') + ' • ' + p.s + '</small>';
+    el.querySelector('button').addEventListener('click', function(){
+      planner.splice(i, 1);
+      savePlanner();
+      renderPlanner();
+      if(window.SFX && SFX.tap) SFX.tap();
+    });
+    box.appendChild(el);
+  });
+}
+
+document.getElementById('pGo').addEventListener('click', function(){
+  var t = esc(document.getElementById('pTitle').value.trim());
+  if(!t){
+    document.getElementById('pTitle').focus();
+    if(window.SFX && SFX.err) SFX.err();
+    return;
+  }
+  var d = document.getElementById('pDate').value || '-';
+  var s = document.getElementById('pStat').value;
+  planner.unshift({t: t, d: d, s: s});
+  document.getElementById('pTitle').value = '';
+  savePlanner();
+  renderPlanner();
+  if(window.SFX && SFX.ok) SFX.ok();
+});
+
+renderPlanner();
+
+// ============================================================
+// ================ STATS ====================================
+// ============================================================
+document.getElementById('sGo').addEventListener('click', function(){
+  var v = parseInt(document.getElementById('sVid').value) || 0;
+  var t = Math.max(1, parseInt(document.getElementById('sTgt').value) || 1);
+  var s = parseInt(document.getElementById('sStreak').value) || 0;
+  var views = parseInt(document.getElementById('sViews').value) || 0;
+
+  var pct = Math.min(100, Math.round(v / t * 100));
+  var remain = Math.max(0, t - v);
+  var avg = v > 0 ? Math.round(views / v) : 0;
+
+  var level, levelEmoji;
+  if(pct >= 100){ level = 'MASTER'; levelEmoji = '👑'; }
+  else if(pct >= 70){ level = 'PRO'; levelEmoji = '🔥'; }
+  else if(pct >= 40){ level = 'RISING'; levelEmoji = '⭐'; }
+  else if(pct >= 15){ level = 'BEGINNER'; levelEmoji = '🌱'; }
+  else { level = 'NEWBIE'; levelEmoji = '✨'; }
+
+  var out = '<div class="stat-grid">';
+  out += '<div class="stat-box"><div class="lbl">Upload</div><div class="val acc">' + v + '</div></div>';
+  out += '<div class="stat-box"><div class="lbl">Target</div><div class="val">' + t + '</div></div>';
+  out += '<div class="stat-box"><div class="lbl">Progress</div><div class="val pink">' + pct + '%</div></div>';
+  out += '<div class="stat-box"><div class="lbl">Streak</div><div class="val cyan">' + s + '🔥</div></div>';
+  out += '<div class="stat-box"><div class="lbl">Total Views</div><div class="val">' + views.toLocaleString('id-ID') + '</div></div>';
+  out += '<div class="stat-box"><div class="lbl">Avg / Video</div><div class="val">' + avg.toLocaleString('id-ID') + '</div></div>';
+  out += '</div>';
+
+  out += '<div class="progress"><div class="progress-bar" style="width:' + pct + '%"></div></div>';
+
+  out += '<div class="res" style="margin-top:0">';
+  out += levelEmoji + ' Level: <b>' + level + '</b>\n\n';
+  if(remain > 0){
+    out += '💡 ' + remain + ' video lagi untuk capai target.\n';
+    out += '📅 Estimasi: ' + Math.ceil(remain / 3) + ' minggu kalau upload 3×/minggu.\n';
+  } else {
+    out += '🎉 Selamat! Target sudah tercapai!\n';
+    out += '🚀 Naikkan target jadi ' + (t + 10) + ' untuk terus berkembang.\n';
+  }
+  if(s >= 30) out += '\n🏆 Streak ' + s + ' hari — luar biasa!\n';
+  else if(s >= 7) out += '\n🔥 Konsisten! Pertahankan streak-mu.\n';
+  else if(s > 0) out += '\n💪 Bagus! Coba tingkatkan streak-mu.\n';
+  else out += '\n⚠️ Ayo mulai streak hari ini!\n';
+  out += '</div>';
+
+  document.getElementById('sStats').innerHTML = out;
+  if(window.SFX && SFX.ok) SFX.ok();
+});
+
+// Enter handlers
+['iNiche','hTopic','cTopic','tNiche','scTopic','pTitle'].forEach(function(id){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    var map = {iNiche:'iGo', hTopic:'hGo', cTopic:'cGo', tNiche:'tGo', scTopic:'scGo', pTitle:'pGo'};
+    var btn = document.getElementById(map[id]);
+    if(btn) btn.click();
+  });
+});
+
+})();
+</script>
+
+<!-- ============ PWA ============ -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('../sw.js', { scope: '../' })
+        .then(reg => console.log('[PWA] SW registered:', reg.scope))
+        .catch(err => console.warn('[PWA] SW failed:', err));
+    });
+  }
+</script>
+</body></html>

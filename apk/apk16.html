@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Rubik Solver 3D · RubyEngine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css" />
+
+<style>
+  @keyframes rePageIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  html.re-trans body { animation: rePageIn 0.4s cubic-bezier(0.4,0,0.2,1) both; }
+  html.re-leaving body {
+    opacity: 0 !important;
+    transform: translateY(-4px) !important;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  #re-topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #7c5cff, #22d3ee, #7c5cff);
+    background-size: 200% 100%;
+    transform: scaleX(0);
+    transform-origin: left;
+    opacity: 0;
+    z-index: 99999;
+    pointer-events: none;
+    box-shadow: 0 0 14px rgba(124,92,255,0.7);
+    animation: reBarShift 2s linear infinite;
+    transition: transform 0.25s ease, opacity 0.15s ease;
+  }
+  @keyframes reBarShift { to { background-position: 200% 0; } }
+  #re-topbar.show { opacity: 1; transform: scaleX(1); }
+</script>
+</style>
+<script>document.documentElement.classList.add('re-trans');</script>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7c5cff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RubyEngine">
+<link rel="apple-touch-icon" href="../image/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../image/icon-192.png">
+
+<style>
+  /* =========================================
+     ROOT & LAYOUT
+  ========================================= */
+  html {
+    background: #05060a;
+    overflow-x: hidden;
+  }
+  body.rb-body {
+    background: transparent;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: #e8ecf5;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* =========================================
+     TOP BAR
+  ========================================= */
+  .rb-top {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px 12px;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .rb-back {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: #0e1119;
+    border: 1px solid #1c2030;
+    display: grid;
+    place-items: center;
+    color: #e8ecf5;
+    text-decoration: none;
+    font-size: 20px;
+    transition: all 0.15s ease;
+  }
+  .rb-back:active { transform: scale(0.94); background: #141824; }
+  .rb-title {
+    flex: 1;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #fff;
+  }
+  .rb-badge {
+    padding: 5px 11px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(34,211,238,0.16), rgba(124,92,255,0.16));
+    border: 1px solid rgba(34,211,238,0.35);
+    color: #7ee0ee;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* =========================================
+     SHELL
+  ========================================= */
+  .rb-shell {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 6px 20px 32px;
+    box-sizing: border-box;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* =========================================
+     HINT BAR
+  ========================================= */
+  .rb-hint-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(34,211,238,0.06), rgba(34,211,238,0.02));
+    border: 1px solid rgba(34,211,238,0.18);
+    font-size: 12.5px;
+    color: #a8adbd;
+    line-height: 1.5;
+  }
+  .rb-hint-bar svg {
+    flex-shrink: 0;
+    color: #22d3ee;
+    opacity: 0.8;
+  }
+</style>
+  
+  <style>
+  /* =========================================
+     3D CUBE VIEWPORT
+  ========================================= */
+  .rb-scene {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1/1;
+    max-width: 340px;
+    margin: 0 auto;
+    perspective: 1400px;
+    perspective-origin: 50% 50%;
+    display: grid;
+    place-items: center;
+    cursor: grab;
+    touch-action: none;
+  }
+  .rb-scene:active { cursor: grabbing; }
+
+  /* Subtle radial glow di belakang cube */
+  .rb-scene::before {
+    content: '';
+    position: absolute;
+    inset: 15%;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(34,211,238,0.10),
+      rgba(124,92,255,0.06) 40%,
+      transparent 70%
+    );
+    filter: blur(30px);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* =========================================
+     CUBE
+  ========================================= */
+  .rb-cube {
+    position: relative;
+    width: 62%;
+    height: 62%;
+    transform-style: preserve-3d;
+    transform:
+      rotateX(-24deg)
+      rotateY(-32deg)
+      rotateZ(0deg);
+    transition: transform 0.12s linear;
+    will-change: transform;
+  }
+
+  /* =========================================
+     FACE
+  ========================================= */
+  .rb-face {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 4px;
+    padding: 6px;
+    background: #0a0d14;
+    border: 1px solid #232838;
+    border-radius: 8px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    box-sizing: border-box;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+  }
+
+  /* Posisi tiap face */
+  .rb-face[data-face="F"] { transform: translateZ(calc(var(--cube-half))); }
+  .rb-face[data-face="B"] { transform: rotateY(180deg) translateZ(calc(var(--cube-half))); }
+  .rb-face[data-face="R"] { transform: rotateY(90deg) translateZ(calc(var(--cube-half))); }
+  .rb-face[data-face="L"] { transform: rotateY(-90deg) translateZ(calc(var(--cube-half))); }
+  .rb-face[data-face="U"] { transform: rotateX(90deg) translateZ(calc(var(--cube-half))); }
+  .rb-face[data-face="D"] { transform: rotateX(-90deg) translateZ(calc(var(--cube-half))); }
+
+  /* =========================================
+     STICKER
+  ========================================= */
+  .rb-sticker {
+    border-radius: 5px;
+    background: #171b26;
+    border: 1px solid #232838;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.12s ease, box-shadow 0.15s ease;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .rb-sticker::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3);
+    pointer-events: none;
+  }
+  .rb-sticker.filled {
+    border-color: rgba(255,255,255,0.1);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.18),
+      inset 0 -2px 5px rgba(0,0,0,0.35);
+  }
+  .rb-sticker.filled::before {
+    content: '';
+    position: absolute;
+    inset: 2px 2px 60% 2px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.35), transparent);
+    pointer-events: none;
+  }
+  .rb-sticker.center {
+    cursor: not-allowed;
+    box-shadow:
+      inset 0 0 0 1.5px rgba(34,211,238,0.35),
+      inset 0 1px 0 rgba(255,255,255,0.18);
+  }
+  .rb-sticker:not(.center):active { transform: scale(0.9); }
+
+  /* =========================================
+     CURRENT COLOR INDICATOR
+  ========================================= */
+  .rb-current {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #0e1119, #0a0d14);
+    border: 1px solid #1c2030;
+    font-size: 12.5px;
+    color: #7a8090;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .rb-current-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: #00b050;
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: background 0.2s ease;
+  }
+  .rb-current-text {
+    color: #e8ecf5;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* =========================================
+     COLOR PALETTE
+  ========================================= */
+  .rb-palette {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 10px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #0e1119, #0a0d14);
+    border: 1px solid #1c2030;
+  }
+  .rb-color {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .rb-color:active { transform: scale(0.9); }
+  .rb-color.selected {
+    border-color: #22c55e;
+    box-shadow:
+      0 0 0 2px rgba(34,197,94,0.25),
+      0 0 18px rgba(34,197,94,0.5);
+    transform: scale(1.08);
+  }
+  .rb-color[data-color="W"] { background: #ffffff; }
+  .rb-color[data-color="G"] { background: #00b050; }
+  .rb-color[data-color="R"] { background: #e8112d; }
+  .rb-color[data-color="B"] { background: #0051ba; }
+  .rb-color[data-color="O"] { background: #ff5800; }
+  .rb-color[data-color="Y"] { background: #ffd500; }
+  .rb-color[data-color="E"] {
+    background: #171b26;
+    border: 3px dashed #3a4054;
+    display: grid;
+    place-items: center;
+    color: #6b7184;
+  }
+  .rb-color[data-color="E"]::before {
+    content: '×';
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .rb-color[data-color="E"].selected {
+    border-color: #f87171;
+    border-style: solid;
+    box-shadow: 0 0 0 2px rgba(248,113,113,0.25), 0 0 18px rgba(248,113,113,0.4);
+  }
+
+  /* =========================================
+     NAV BUTTONS
+  ========================================= */
+  .rb-nav {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 4px;
+  }
+  .rb-btn {
+    padding: 16px 18px;
+    border-radius: 14px;
+    border: none;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.18s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rb-btn:active { transform: translateY(1px); }
+  .rb-btn.ghost {
+    background: #171b26;
+    border: 1px solid #232838;
+    color: #a8adbd;
+    padding: 16px 20px;
+  }
+  .rb-btn.ghost:hover { background: #1c2030; color: #e8ecf5; border-color: #2f3444; }
+  .rb-btn.solve {
+    background: linear-gradient(135deg, #22c55e, #10b981);
+    color: #031a0d;
+    box-shadow:
+      0 12px 30px rgba(34,197,94,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .rb-btn.solve:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      0 16px 38px rgba(34,197,94,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+  .rb-btn.solve:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .rb-btn-icon { display: inline-grid; place-items: center; }
+</style>
+  
+  <style>
+  /* =========================================
+     MODAL
+  ========================================= */
+  .rb-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(3, 5, 10, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .rb-modal.show { display: flex; }
+
+  .rb-modal-card {
+    width: 100%;
+    max-width: 420px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 30px 24px 24px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #0e1119, #070910);
+    border: 1px solid rgba(34,211,238,0.3);
+    box-shadow:
+      0 30px 80px rgba(0,0,0,0.8),
+      0 0 0 1px rgba(34,211,238,0.1),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+    animation: rbModalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    text-align: center;
+  }
+  @keyframes rbModalPop {
+    from { opacity: 0; transform: scale(0.92) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .rb-modal-icon {
+    width: 72px; height: 72px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #22c55e, #10b981);
+    display: grid; place-items: center;
+    box-shadow:
+      0 16px 40px rgba(34,197,94,0.45),
+      inset 0 2px 0 rgba(255,255,255,0.3);
+  }
+  .rb-modal-title {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .rb-modal-sub {
+    font-size: 13px;
+    color: #7a8090;
+    font-weight: 500;
+    margin-bottom: 22px;
+  }
+  .rb-modal-sub strong { color: #22d3ee; font-weight: 800; }
+
+  .rb-modal-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #6b7184;
+    text-align: left;
+    margin-bottom: 10px;
+  }
+
+  .rb-moves {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    padding: 16px 14px;
+    border-radius: 14px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid #1c2030;
+    margin-bottom: 22px;
+    min-height: 60px;
+    align-items: center;
+  }
+  .rb-move {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 9px;
+    background: linear-gradient(180deg, #1a1f2e, #12161f);
+    border: 1px solid #262a3a;
+    color: #e8ecf5;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .rb-move.prime { color: #f87171; }
+  .rb-move.double { color: #fbbf24; }
+
+  .rb-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .rb-modal-btn {
+    padding: 14px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+  }
+  .rb-modal-btn.primary {
+    background: linear-gradient(135deg, #22d3ee, #3b82f6);
+    color: #041014;
+    box-shadow: 0 10px 24px rgba(34,211,238,0.35);
+  }
+  .rb-modal-btn.primary:active { transform: scale(0.96); }
+  .rb-modal-btn.ghost {
+    background: #171b26;
+    border: 1px solid #232838;
+    color: #a8adbd;
+  }
+  .rb-modal-btn.ghost:hover { background: #1c2030; color: #e8ecf5; border-color: #2f3444; }
+
+  .rb-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 30px 10px;
+  }
+  .rb-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(34,211,238,0.2);
+    border-top-color: #22d3ee;
+    border-radius: 50%;
+    animation: rbSpin 0.8s linear infinite;
+  }
+  @keyframes rbSpin { to { transform: rotate(360deg); } }
+  .rb-loading-text {
+    font-size: 13.5px;
+    color: #7a8090;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .rb-error {
+    display: none;
+    padding: 14px;
+    border-radius: 12px;
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.35);
+    color: #fca5a5;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .rb-error.show { display: block; }
+</style>
+</head>
+
+<body class="rb-body">
+
+  <!-- TOP BAR -->
+  <div class="rb-top">
+    <a href="../apk.html" class="rb-back">←</a>
+    <div class="rb-title">Rubik Solver</div>
+    <div class="rb-badge">3D</div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="rb-shell">
+
+    <!-- HINT -->
+    <div class="rb-hint-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 16v-4"/>
+        <path d="M12 8h.01"/>
+      </svg>
+      <span>Drag untuk rotate · Klik sticker untuk warnai</span>
+    </div>
+
+    <!-- 3D CUBE -->
+    <div class="rb-scene" id="rbScene">
+      <div class="rb-cube" id="rbCube">
+
+        <!-- FRONT -->
+        <div class="rb-face" data-face="F">
+          <div class="rb-sticker" data-face="F" data-i="0"></div>
+          <div class="rb-sticker" data-face="F" data-i="1"></div>
+          <div class="rb-sticker" data-face="F" data-i="2"></div>
+          <div class="rb-sticker" data-face="F" data-i="3"></div>
+          <div class="rb-sticker center" data-face="F" data-i="4"></div>
+          <div class="rb-sticker" data-face="F" data-i="5"></div>
+          <div class="rb-sticker" data-face="F" data-i="6"></div>
+          <div class="rb-sticker" data-face="F" data-i="7"></div>
+          <div class="rb-sticker" data-face="F" data-i="8"></div>
+        </div>
+
+        <!-- BACK -->
+        <div class="rb-face" data-face="B">
+          <div class="rb-sticker" data-face="B" data-i="0"></div>
+          <div class="rb-sticker" data-face="B" data-i="1"></div>
+          <div class="rb-sticker" data-face="B" data-i="2"></div>
+          <div class="rb-sticker" data-face="B" data-i="3"></div>
+          <div class="rb-sticker center" data-face="B" data-i="4"></div>
+          <div class="rb-sticker" data-face="B" data-i="5"></div>
+          <div class="rb-sticker" data-face="B" data-i="6"></div>
+          <div class="rb-sticker" data-face="B" data-i="7"></div>
+          <div class="rb-sticker" data-face="B" data-i="8"></div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="rb-face" data-face="R">
+          <div class="rb-sticker" data-face="R" data-i="0"></div>
+          <div class="rb-sticker" data-face="R" data-i="1"></div>
+          <div class="rb-sticker" data-face="R" data-i="2"></div>
+          <div class="rb-sticker" data-face="R" data-i="3"></div>
+          <div class="rb-sticker center" data-face="R" data-i="4"></div>
+          <div class="rb-sticker" data-face="R" data-i="5"></div>
+          <div class="rb-sticker" data-face="R" data-i="6"></div>
+          <div class="rb-sticker" data-face="R" data-i="7"></div>
+          <div class="rb-sticker" data-face="R" data-i="8"></div>
+        </div>
+
+        <!-- LEFT -->
+        <div class="rb-face" data-face="L">
+          <div class="rb-sticker" data-face="L" data-i="0"></div>
+          <div class="rb-sticker" data-face="L" data-i="1"></div>
+          <div class="rb-sticker" data-face="L" data-i="2"></div>
+          <div class="rb-sticker" data-face="L" data-i="3"></div>
+          <div class="rb-sticker center" data-face="L" data-i="4"></div>
+          <div class="rb-sticker" data-face="L" data-i="5"></div>
+          <div class="rb-sticker" data-face="L" data-i="6"></div>
+          <div class="rb-sticker" data-face="L" data-i="7"></div>
+          <div class="rb-sticker" data-face="L" data-i="8"></div>
+        </div>
+
+        <!-- TOP -->
+        <div class="rb-face" data-face="U">
+          <div class="rb-sticker" data-face="U" data-i="0"></div>
+          <div class="rb-sticker" data-face="U" data-i="1"></div>
+          <div class="rb-sticker" data-face="U" data-i="2"></div>
+          <div class="rb-sticker" data-face="U" data-i="3"></div>
+          <div class="rb-sticker center" data-face="U" data-i="4"></div>
+          <div class="rb-sticker" data-face="U" data-i="5"></div>
+          <div class="rb-sticker" data-face="U" data-i="6"></div>
+          <div class="rb-sticker" data-face="U" data-i="7"></div>
+          <div class="rb-sticker" data-face="U" data-i="8"></div>
+        </div>
+
+        <!-- BOTTOM -->
+        <div class="rb-face" data-face="D">
+          <div class="rb-sticker" data-face="D" data-i="0"></div>
+          <div class="rb-sticker" data-face="D" data-i="1"></div>
+          <div class="rb-sticker" data-face="D" data-i="2"></div>
+          <div class="rb-sticker" data-face="D" data-i="3"></div>
+          <div class="rb-sticker center" data-face="D" data-i="4"></div>
+          <div class="rb-sticker" data-face="D" data-i="5"></div>
+          <div class="rb-sticker" data-face="D" data-i="6"></div>
+          <div class="rb-sticker" data-face="D" data-i="7"></div>
+          <div class="rb-sticker" data-face="D" data-i="8"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CURRENT COLOR -->
+    <div class="rb-current">
+      Warna aktif:
+      <span class="rb-current-swatch" id="currentSwatch"></span>
+      <span class="rb-current-text" id="currentText">Hijau</span>
+    </div>
+
+    <!-- PALETTE -->
+    <div class="rb-palette" id="rbPalette">
+      <button type="button" class="rb-color" data-color="W" aria-label="Putih"></button>
+      <button type="button" class="rb-color" data-color="G" aria-label="Hijau"></button>
+      <button type="button" class="rb-color" data-color="R" aria-label="Merah"></button>
+      <button type="button" class="rb-color" data-color="B" aria-label="Biru"></button>
+      <button type="button" class="rb-color" data-color="O" aria-label="Oranye"></button>
+      <button type="button" class="rb-color" data-color="Y" aria-label="Kuning"></button>
+      <button type="button" class="rb-color" data-color="E" aria-label="Hapus"></button>
+    </div>
+
+    <!-- NAV -->
+    <div class="rb-nav">
+      <button type="button" class="rb-btn ghost" id="btnReset">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/>
+        </svg>
+        Reset
+      </button>
+      <button type="button" class="rb-btn solve" id="btnSolve">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+        Solve Rubik
+      </button>
+    </div>
+
+  </main>
+
+  <!-- SUCCESS MODAL -->
+  <div class="rb-modal" id="rbModal">
+    <div class="rb-modal-card">
+      <div class="rb-modal-icon">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#031a0d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12l5 5L20 6"/>
+        </svg>
+      </div>
+      <div class="rb-modal-title">Berhasil Dipecahkan! 🎉</div>
+      <div class="rb-modal-sub">Solusi dalam <strong id="moveCount">0</strong> langkah</div>
+      <div class="rb-modal-section-title">Urutan Gerakan</div>
+      <div class="rb-moves" id="movesList"></div>
+      <div class="rb-modal-actions">
+        <button type="button" class="rb-modal-btn ghost" id="btnNewCube">⟲ Reset</button>
+        <button type="button" class="rb-modal-btn primary" id="btnCopy">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          Copy
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING MODAL -->
+  <div class="rb-modal" id="rbLoading">
+    <div class="rb-modal-card">
+      <div class="rb-loading">
+        <div class="rb-spinner"></div>
+        <div class="rb-loading-text" id="loadingText">Menghitung solusi…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERROR MODAL -->
+  <div class="rb-modal" id="rbErrorModal">
+    <div class="rb-modal-card">
+      <div class="rb-modal-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      <div class="rb-modal-title">Tidak Bisa Diselesaikan</div>
+      <div class="rb-modal-sub">Rubik ini tidak valid</div>
+      <div class="rb-error show" id="errorMsg"></div>
+      <div class="rb-modal-actions">
+        <button type="button" class="rb-modal-btn ghost" id="btnErrorReset" style="grid-column: span 2;">Tutup & Cek Ulang</button>
+      </div>
+    </div>
+  </div>
+  
+   <!-- Rubik Solver Library — multi-CDN fallback -->
+<script>
+  window.__cubeLoaded = false;
+  window.__cubeError = false;
+</script>
+<script
+  src="https://cdn.jsdelivr.net/gh/ldez/cubejs@master/lib/cube.min.js"
+  onload="window.__cubeLoaded = true;"
+  onerror="window.__cubeError = true;"
+></script>
+<script>
+  // Fallback CDN kalau jsdelivr gagal
+  if (!window.__cubeLoaded && typeof Cube === 'undefined') {
+    document.write('<script src="https://unpkg.com/cubejs@1.3.2/lib/cube.min.js" onload="window.__cubeLoaded=true;"><\/script>');
+  }
+</script>
+
+  <script src="../js/sfx.js"></script>
+  <script src="../js/transition.js"></script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* =============================================
+       CONFIG
+    ============================================= */
+    var FACES = ['F', 'R', 'B', 'L', 'U', 'D'];
+
+    // Western color scheme: G depan, R kanan, B belakang, O kiri, W atas, Y bawah
+    var CENTER_COLOR = {
+      'F': 'G',
+      'R': 'R',
+      'B': 'B',
+      'L': 'O',
+      'U': 'W',
+      'D': 'Y'
+    };
+
+    // Warna → face untuk cubejs (URFDLB)
+    var COLOR_TO_FACE = {
+      'W': 'U',
+      'R': 'R',
+      'G': 'F',
+      'Y': 'D',
+      'O': 'L',
+      'B': 'B'
+    };
+
+    // Face → offset di string cubejs (URFDLB)
+    var FACE_TO_OFFSET = {
+      'U': 0,
+      'R': 9,
+      'F': 18,
+      'D': 27,
+      'L': 36,
+      'B': 45
+    };
+
+    // Warna → hex untuk CSS
+    var COLOR_HEX = {
+      'W': '#ffffff',
+      'G': '#00b050',
+      'R': '#e8112d',
+      'B': '#0051ba',
+      'O': '#ff5800',
+      'Y': '#ffd500'
+    };
+
+    var COLOR_NAME = {
+      'W': 'Putih',
+      'G': 'Hijau',
+      'R': 'Merah',
+      'B': 'Biru',
+      'O': 'Oranye',
+      'Y': 'Kuning',
+      'E': 'Hapus'
+    };
+
+    /* =============================================
+       STATE
+    ============================================= */
+    var selectedColor = 'G';
+
+    // facesData[face][cellIdx] = color code or ''
+    var facesData = {};
+
+    /* =============================================
+       DOM
+    ============================================= */
+    var scene     = document.getElementById('rbScene');
+    var cube      = document.getElementById('rbCube');
+    var palette   = document.getElementById('rbPalette');
+    var curSwatch = document.getElementById('currentSwatch');
+    var curText   = document.getElementById('currentText');
+    var btnReset  = document.getElementById('btnReset');
+    var btnSolve  = document.getElementById('btnSolve');
+
+    var modal       = document.getElementById('rbModal');
+    var modalLoad   = document.getElementById('rbLoading');
+    var modalErr    = document.getElementById('rbErrorModal');
+    var movesList   = document.getElementById('movesList');
+    var moveCount   = document.getElementById('moveCount');
+    var errorMsg    = document.getElementById('errorMsg');
+    var loadingText = document.getElementById('loadingText');
+
+    var btnNewCube    = document.getElementById('btnNewCube');
+    var btnCopy       = document.getElementById('btnCopy');
+    var btnErrorReset = document.getElementById('btnErrorReset');
+
+    /* =============================================
+       SFX HELPERS
+    ============================================= */
+    function sfxTap()    { if (window.SFX && SFX.tap)    SFX.tap(); }
+    function sfxPick()   { if (window.SFX && SFX.pick)   SFX.pick(); }
+    function sfxErr()    { if (window.SFX && SFX.err)    SFX.err(); }
+    function sfxWin()    { if (window.SFX && SFX.win)    SFX.win(); }
+    function sfxPickup() { if (window.SFX && SFX.pickup) SFX.pickup(); }
+    function vib(ms)     { if (navigator.vibrate) navigator.vibrate(ms); }
+
+    /* =============================================
+       INIT STATE
+    ============================================= */
+    function initFacesData() {
+      facesData = {};
+      FACES.forEach(function (f) {
+        var arr = ['', '', '', '', '', '', '', '', ''];
+        arr[4] = CENTER_COLOR[f]; // center
+        facesData[f] = arr;
+      });
+    }
+
+    /* =============================================
+       RENDER STICKERS
+    ============================================= */
+    var stickerEls = document.querySelectorAll('.rb-sticker');
+
+    function renderStickers() {
+      stickerEls.forEach(function (el) {
+        var f = el.dataset.face;
+        var i = parseInt(el.dataset.i, 10);
+        var color = facesData[f][i] || '';
+
+        if (color) {
+          el.style.background = COLOR_HEX[color];
+          el.classList.add('filled');
+        } else {
+          el.style.background = '';
+          el.classList.remove('filled');
+        }
+
+        if (i === 4) {
+          el.classList.add('center');
+        }
+      });
+    }
+
+    function renderPalette() {
+      palette.querySelectorAll('.rb-color').forEach(function (btn) {
+        btn.classList.toggle('selected', btn.dataset.color === selectedColor);
+      });
+      curSwatch.style.background = selectedColor === 'E' ? '#171b26' : COLOR_HEX[selectedColor];
+      curText.textContent = COLOR_NAME[selectedColor];
+    }
+
+    /* =============================================
+       3D ROTATION
+    ============================================= */
+    var rotX = -24;
+    var rotY = -32;
+    var dragging = false;
+    var moved = false;
+    var startX = 0, startY = 0;
+    var lastX = 0, lastY = 0;
+    var velocityX = 0, velocityY = 0;
+    var lastTime = 0;
+    var rafId = 0;
+
+    function applyRotation() {
+      cube.style.transform =
+        'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
+    }
+
+    function startDrag(e) {
+      dragging = true;
+      moved = false;
+      var t = e.touches ? e.touches[0] : e;
+      startX = lastX = t.clientX;
+      startY = lastY = t.clientY;
+      velocityX = 0;
+      velocityY = 0;
+      lastTime = performance.now();
+      cancelAnimationFrame(rafId);
+    }
+
+    function moveDrag(e) {
+      if (!dragging) return;
+      var t = e.touches ? e.touches[0] : e;
+      var x = t.clientX;
+      var y = t.clientY;
+      var dx = x - lastX;
+      var dy = y - lastY;
+      lastX = x;
+      lastY = y;
+
+      if (Math.abs(x - startX) > 4 || Math.abs(y - startY) > 4) {
+        moved = true;
+      }
+
+      rotY += dx * 0.5;
+      rotX -= dy * 0.5;
+      rotX = Math.max(-89, Math.min(89, rotX));
+
+      velocityX = dy * 0.5;
+      velocityY = dx * 0.5;
+      lastTime = performance.now();
+
+      applyRotation();
+    }
+
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+
+      // Momentum
+      function momentum() {
+        velocityX *= 0.92;
+        velocityY *= 0.92;
+        rotX -= velocityX;
+        rotY += velocityY;
+        rotX = Math.max(-89, Math.min(89, rotX));
+        applyRotation();
+
+        if (Math.abs(velocityX) > 0.3 || Math.abs(velocityY) > 0.3) {
+          rafId = requestAnimationFrame(momentum);
+        }
+      }
+      rafId = requestAnimationFrame(momentum);
+    }
+
+    scene.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', moveDrag);
+    window.addEventListener('mouseup', endDrag);
+
+    scene.addEventListener('touchstart', startDrag, { passive: true });
+    scene.addEventListener('touchmove', moveDrag, { passive: true });
+    scene.addEventListener('touchend', endDrag);
+    scene.addEventListener('touchcancel', endDrag);
+
+    /* =============================================
+       CLICK STICKER — setelah cek drag
+    ============================================= */
+    var downSticker = null;
+
+    function onStickerDown(e) {
+      var el = e.target.closest('.rb-sticker');
+      if (!el) return;
+      if (el.dataset.i === '4') return; // center
+      downSticker = el;
+    }
+
+    function onStickerUp(e) {
+      if (!downSticker) return;
+      if (moved) { downSticker = null; return; }
+
+      var el = downSticker;
+      downSticker = null;
+
+      var f = el.dataset.face;
+      var i = parseInt(el.dataset.i, 10);
+
+      if (selectedColor === 'E') {
+        facesData[f][i] = '';
+        sfxTap();
+      } else {
+        facesData[f][i] = selectedColor;
+        sfxPick();
+      }
+
+      vib(8);
+      renderStickers();
+    }
+
+    scene.addEventListener('pointerdown', function (e) {
+      var el = e.target.closest('.rb-sticker');
+      if (el && el.dataset.i !== '4') downSticker = el;
+    });
+
+    scene.addEventListener('pointerup', onStickerUp);
+
+    /* =============================================
+       PALETTE
+    ============================================= */
+    palette.addEventListener('click', function (e) {
+      var btn = e.target.closest('.rb-color');
+      if (!btn) return;
+      selectedColor = btn.dataset.color;
+      sfxTap();
+      vib(8);
+      renderPalette();
+    });
+
+    /* =============================================
+       VALIDASI
+    ============================================= */
+    function validate() {
+      var counts = { W:0, G:0, R:0, B:0, O:0, Y:0 };
+
+      for (var fi = 0; fi < FACES.length; fi++) {
+        var f = FACES[fi];
+        for (var i = 0; i < 9; i++) {
+          var c = facesData[f][i];
+          if (!c) {
+            return { ok: false, msg: 'Masih ada kotak kosong di face ' + f + '.' };
+          }
+          counts[c]++;
+        }
+      }
+
+      for (var k in counts) {
+        if (counts[k] !== 9) {
+          return {
+            ok: false,
+            msg: 'Warna ' + COLOR_NAME[k] + ' muncul ' + counts[k] + '×, harus 9×.'
+          };
+        }
+      }
+      return { ok: true };
+    }
+
+    /* =============================================
+       BUILD STRING UNTUK CUBEJS
+    ============================================= */
+    function buildCubeString() {
+      var arr = new Array(54);
+      for (var fi = 0; fi < FACES.length; fi++) {
+        var f = FACES[fi];
+        var offset = FACE_TO_OFFSET[f];
+        for (var i = 0; i < 9; i++) {
+          var color = facesData[f][i];
+          arr[offset + i] = COLOR_TO_FACE[color];
+        }
+      }
+      return arr.join('');
+    }
+
+    /* =============================================
+   SOLVER INIT — Robust (Worker override + retry)
+============================================= */
+var solverRetryCount = 0;
+var MAX_RETRY = 8;
+
+function updateStatus(text, tone) {
+  var hintEl = document.querySelector('.rb-hint-bar span');
+  if (!hintEl) return;
+  hintEl.textContent = text;
+  var bar = document.querySelector('.rb-hint-bar');
+  if (!bar) return;
+  bar.style.borderColor =
+    tone === 'ok' ? 'rgba(34,197,94,0.4)' :
+    tone === 'err' ? 'rgba(239,68,68,0.4)' :
+    tone === 'warn' ? 'rgba(245,158,11,0.4)' :
+    'rgba(34,211,238,0.18)';
+}
+
+function initSolverOnce() {
+  if (window.Cube && Cube._solverReady) return true;
+  if (typeof Cube === 'undefined') return false;
+
+  try {
+    // Paksa sync mode: Worker sering gagal di HP / PWA / IP LAN
+    var savedWorker = window.Worker;
+    window.Worker = undefined;
+
+    var t0 = performance.now();
+    Cube.initSolver();
+    var t1 = performance.now();
+    console.log('[Rubik] Solver ready (sync) in ' + (t1 - t0).toFixed(0) + 'ms');
+
+    window.Worker = savedWorker;
+    Cube._solverReady = true;
+    return true;
+
+  } catch (e) {
+    console.error('[Rubik] Init failed:', e);
+    try { window.Worker = window.__savedWorker; } catch (_) {}
+    return false;
+  }
+}
+
+function initSolverWithRetry() {
+  if (window.Cube && Cube._solverReady) {
+    updateStatus('Solver siap · Drag untuk rotate, klik sticker untuk warnai', 'ok');
+    return;
+  }
+
+  if (typeof Cube === 'undefined') {
+    if (solverRetryCount < MAX_RETRY) {
+      solverRetryCount++;
+      updateStatus('Memuat library solver… (' + solverRetryCount + ')', 'warn');
+      setTimeout(initSolverWithRetry, 500);
+    } else {
+      updateStatus('❌ Library solver gagal dimuat. Cek koneksi internet.', 'err');
+    }
+    return;
+  }
+
+  // Cube ada, coba init
+  updateStatus('Menyiapkan solver…', 'warn');
+
+  setTimeout(function () {
+    var ok = initSolverOnce();
+    if (ok) {
+      updateStatus('Solver siap · Drag untuk rotate, klik sticker untuk warnai', 'ok');
+    } else if (solverRetryCount < MAX_RETRY) {
+      solverRetryCount++;
+      setTimeout(initSolverWithRetry, 500);
+    } else {
+      updateStatus('❌ Solver gagal di-inisialisasi. Coba refresh halaman.', 'err');
+    }
+  }, 50);
+}
+
+// Preload setelah DOM ready
+setTimeout(initSolverWithRetry, 300);
+
+    /* =============================================
+       HANDLE SOLVE
+    ============================================= */
+    function handleSolve() {
+  // 1. Validasi
+  var v = validate();
+  if (!v.ok) {
+    showError(v.msg);
+    sfxErr();
+    vib([60, 40, 60]);
+    return;
+  }
+
+  // 2. Cek Cube ada
+  if (typeof Cube === 'undefined') {
+    showError(
+      'Library solver gagal dimuat.<br>' +
+      '<span style="opacity:0.7;font-size:11.5px">' +
+      'Cek koneksi internet, lalu refresh halaman.' +
+      '</span>'
+    );
+    sfxErr();
+    return;
+  }
+
+  // 3. Cek solver siap — kalau belum, coba init sekarang
+  if (!Cube._solverReady) {
+    updateStatus('Menyiapkan solver, tunggu sebentar…', 'warn');
+    var ok = initSolverOnce();
+    if (!ok) {
+      showError(
+        'Solver belum siap. Coba:<br>' +
+        '<span style="opacity:0.7;font-size:11.5px">' +
+        '1. Tunggu 5 detik<br>2. Refresh halaman<br>3. Cek koneksi internet' +
+        '</span>'
+      );
+      sfxErr();
+      return;
+    }
+  }
+
+  // 4. Show loading
+  loadingText.textContent = 'Menghitung solusi…';
+  modalLoad.classList.add('show');
+
+  setTimeout(function () {
+    try {
+      var str = buildCubeString();
+      console.log('[Rubik] Cube string:', str);
+
+      var cubeObj = Cube.fromString(str);
+
+      if (typeof cubeObj.isSolved === 'function' && cubeObj.isSolved()) {
+        modalLoad.classList.remove('show');
+        showError('Rubik kamu sudah dalam keadaan solved!');
+        return;
+      }
+
+      var t0 = performance.now();
+      var solution = cubeObj.solve();
+      var t1 = performance.now();
+      console.log('[Rubik] Solved in ' + (t1 - t0).toFixed(0) + 'ms');
+      console.log('[Rubik] Solution:', solution);
+
+      modalLoad.classList.remove('show');
+
+      if (!solution || !solution.trim()) {
+        showError('Tidak bisa menemukan solusi. Cek ulang posisi warna.');
+        return;
+      }
+
+      showSolution(solution.trim());
+
+    } catch (err) {
+      modalLoad.classList.remove('show');
+      console.error('[Rubik] Solve error:', err);
+      showError(
+        'Rubik tidak valid.<br>' +
+        '<span style="opacity:0.7;font-size:11.5px">' +
+        (err.message || err) +
+        '</span>'
+      );
+      sfxErr();
+    }
+  }, 100);
+}
+
+    /* =============================================
+       SHOW SOLUTION
+    ============================================= */
+    function showSolution(str) {
+      var moves = str.split(/\s+/).filter(Boolean);
+
+      movesList.innerHTML = '';
+      moves.forEach(function (m) {
+        var chip = document.createElement('span');
+        chip.className = 'rb-move';
+        if (m.indexOf("'") !== -1) chip.classList.add('prime');
+        else if (m.indexOf('2') !== -1) chip.classList.add('double');
+        chip.textContent = m;
+        movesList.appendChild(chip);
+      });
+
+      moveCount.textContent = moves.length;
+      modal.classList.add('show');
+      sfxWin();
+      vib([40, 30, 80, 30, 80]);
+    }
+
+    /* =============================================
+       SHOW ERROR
+    ============================================= */
+    function showError(msg) {
+      errorMsg.innerHTML = msg;
+      modalErr.classList.add('show');
+    }
+
+    /* =============================================
+       ACTIONS
+    ============================================= */
+    btnReset.addEventListener('click', function () {
+      initFacesData();
+      renderStickers();
+      sfxTap();
+      vib(15);
+    });
+
+    btnSolve.addEventListener('click', handleSolve);
+
+    btnNewCube.addEventListener('click', function () {
+      modal.classList.remove('show');
+      initFacesData();
+      renderStickers();
+      rotX = -24;
+      rotY = -32;
+      applyRotation();
+      sfxTap();
+      vib(15);
+    });
+
+    btnErrorReset.addEventListener('click', function () {
+      modalErr.classList.remove('show');
+      sfxTap();
+    });
+
+    btnCopy.addEventListener('click', function () {
+      var text = Array.from(movesList.querySelectorAll('.rb-move'))
+        .map(function (m) { return m.textContent; })
+        .join(' ');
+
+      if (!text) return;
+
+      var originalHTML = btnCopy.innerHTML;
+
+      function onOk() {
+        btnCopy.innerHTML = '✓ Tersalin';
+        sfxPickup();
+        setTimeout(function () { btnCopy.innerHTML = originalHTML; }, 1500);
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(onOk).catch(function () {
+          fallbackCopy(text, onOk);
+        });
+      } else {
+        fallbackCopy(text, onOk);
+      }
+    });
+
+    function fallbackCopy(text, onOk) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); onOk(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+
+    /* =============================================
+       CLOSE MODAL ON BACKDROP
+    ============================================= */
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) modal.classList.remove('show');
+    });
+    modalErr.addEventListener('click', function (e) {
+      if (e.target === modalErr) modalErr.classList.remove('show');
+    });
+
+    /* =============================================
+       SET HALF CUBE SIZE VAR
+    ============================================= */
+    function setCubeHalf() {
+      var rect = cube.getBoundingClientRect();
+      // cube size ~62% dari scene
+      var cubeSize = scene.offsetWidth * 0.62;
+      cube.style.setProperty('--cube-half', (cubeSize / 2) + 'px');
+    }
+
+    /* =============================================
+       INIT
+    ============================================= */
+    function init() {
+      setCubeHalf();
+      initFacesData();
+      renderStickers();
+      renderPalette();
+      applyRotation();
+    }
+
+    window.addEventListener('resize', setCubeHalf);
+    window.addEventListener('orientationchange', function () {
+      setTimeout(setCubeHalf, 200);
+    });
+
+    init();
+
+  })();
+  </script>
+
+  <!-- PWA Register -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('../sw.js', { scope: '../' })
+          .then(function (reg) { console.log('[PWA] SW registered:', reg.scope); })
+          .catch(function (err) { console.warn('[PWA] SW failed:', err); });
+      });
+    }
+  </script>
+
+</body>
+</html>

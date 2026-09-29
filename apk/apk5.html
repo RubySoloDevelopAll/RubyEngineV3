@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Nama Produk · RubyEngine</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff7b3d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RubyEngine">
+<link rel="apple-touch-icon" href="../image/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../image/icon-192.png">
+
+<style>
+:root{
+  --bg:#150a04;--card:rgba(255,255,255,0.04);
+  --fg:#fff4e8;--mut:#b58a72;
+  --acc:#ff7b3d;--acc2:#ffb56b;--acc3:#facc15;
+  --line:rgba(255,123,61,0.16);
+  --grad:linear-gradient(135deg,#ff7b3d 0%,#ffb56b 55%,#facc15 100%);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255,123,61,0.25), transparent),
+    radial-gradient(ellipse 60% 45% at 90% 25%, rgba(250,204,21,0.12), transparent),
+    radial-gradient(ellipse 70% 50% at 10% 85%, rgba(255,181,107,0.14), transparent);
+  color:var(--fg);
+  min-height:100dvh;
+  padding:16px;
+  padding-top:calc(16px + env(safe-area-inset-top));
+  padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  overflow-x:hidden;
+}
+
+/* ===== TOP BAR ===== */
+.top{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.back{
+  width:42px;height:42px;border-radius:14px;
+  border:1px solid var(--line);
+  background:var(--card);backdrop-filter:blur(10px);
+  display:grid;place-items:center;color:var(--fg);
+  text-decoration:none;font-size:20px;flex-shrink:0;
+  transition:all .2s;
+}
+.back:active{transform:scale(.92);background:rgba(255,123,61,0.15)}
+.title-wrap{display:flex;flex-direction:column;gap:2px}
+.title{
+  font-size:17px;font-weight:800;letter-spacing:-0.01em;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent;
+}
+.subtitle{
+  font-size:11px;color:var(--mut);letter-spacing:.06em;
+  font-weight:600;text-transform:uppercase;
+}
+
+/* ===== CARD ===== */
+.card{
+  background:var(--card);backdrop-filter:blur(14px);
+  border:1px solid var(--line);border-radius:18px;
+  padding:16px;margin-bottom:14px;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(400px circle at 50% 0%, rgba(255,123,61,0.10), transparent 60%);
+  pointer-events:none;
+}
+
+/* ===== FORM ===== */
+.f{margin-bottom:12px;position:relative;z-index:1}
+.f:last-child{margin-bottom:0}
+.f label{
+  display:block;font-size:11px;color:var(--mut);
+  margin-bottom:6px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.input-wrap{position:relative}
+.input-icon{
+  position:absolute;top:50%;left:14px;
+  transform:translateY(-50%);font-size:14px;
+  opacity:.55;pointer-events:none;
+}
+.f input{
+  width:100%;padding:14px 14px 14px 40px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  color:var(--fg);font-size:15px;
+  font-family:inherit;font-weight:600;
+  transition:all .2s;
+}
+.f input:focus{
+  outline:none;
+  border-color:rgba(255,123,61,0.5);
+  background:rgba(255,123,61,0.06);
+  box-shadow:0 0 0 4px rgba(255,123,61,0.12);
+}
+.f input::placeholder{color:var(--mut);font-weight:400}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:360px){.row{grid-template-columns:1fr}}
+
+.f select{
+  width:100%;padding:14px 36px 14px 14px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  color:var(--fg);font-size:13.5px;
+  font-family:inherit;font-weight:600;
+  appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23b58a72' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  transition:all .2s;
+}
+.f select:focus{
+  outline:none;
+  border-color:rgba(255,123,61,0.5);
+  background-color:rgba(255,123,61,0.06);
+}
+.f select option{background:#2c1810;color:var(--fg)}
+
+/* ===== TOGGLE ===== */
+.toggle-row{display:flex;gap:8px;position:relative;z-index:1}
+.toggle-btn{
+  flex:1;padding:11px;border-radius:11px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  color:var(--mut);
+  font-family:inherit;font-size:12.5px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.toggle-btn.active{
+  background:rgba(255,123,61,0.15);
+  border-color:rgba(255,123,61,0.45);
+  color:var(--acc2);
+  box-shadow:0 0 20px rgba(255,123,61,0.25);
+}
+.toggle-btn:active{transform:scale(.97)}
+
+/* ===== BUTTON ===== */
+.go{
+  width:100%;padding:16px;border-radius:14px;
+  background:var(--grad);
+  color:#150a04;font-size:15px;font-weight:800;
+  letter-spacing:.03em;
+  border:none;font-family:inherit;cursor:pointer;
+  box-shadow:0 10px 30px -8px rgba(255,123,61,0.55),
+             inset 0 1px 0 rgba(255,255,255,0.35);
+  transition:transform .15s, box-shadow .2s;
+  margin-bottom:18px;
+  position:relative;overflow:hidden;
+}
+.go::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg, rgba(255,255,255,0.35), transparent 55%);
+  pointer-events:none;
+}
+.go:active{
+  transform:scale(.97);
+  box-shadow:0 4px 16px -4px rgba(255,123,61,0.6),
+             inset 0 1px 0 rgba(255,255,255,0.35);
+}
+
+/* ===== RESULT ===== */
+.stats{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:12px;padding:0 4px;
+}
+.stats-label{
+  font-size:12px;color:var(--mut);
+  font-weight:600;letter-spacing:.04em;
+}
+.stats-count{
+  font-size:11px;font-weight:800;
+  padding:3px 10px;border-radius:999px;
+  background:rgba(255,123,61,0.14);
+  color:var(--acc2);
+  border:1px solid rgba(255,123,61,0.28);
+}
+
+.item{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:13px 14px;border-radius:13px;
+  background:rgba(255,255,255,0.035);
+  border:1px solid var(--line);
+  margin-bottom:8px;
+  animation:up .35s cubic-bezier(.4,0,.2,1) both;
+  transition:all .2s;
+}
+.item:hover{
+  border-color:rgba(255,123,61,0.35);
+  background:rgba(255,123,61,0.06);
+}
+.item:active{transform:scale(.98)}
+@keyframes up{
+  from{opacity:0;transform:translateY(10px) scale(.98)}
+  to{opacity:1;transform:none}
+}
+.item span{
+  font-size:14px;font-weight:700;
+  word-break:break-word;flex:1;
+  letter-spacing:-0.005em;line-height:1.35;
+}
+.cp{
+  flex-shrink:0;padding:8px 13px;border-radius:9px;
+  background:rgba(255,123,61,0.12);
+  border:1px solid rgba(255,123,61,0.3);
+  color:var(--acc2);font-size:11.5px;font-weight:800;
+  font-family:inherit;letter-spacing:.04em;
+  cursor:pointer;transition:all .2s;min-width:62px;
+}
+.cp:active{transform:scale(.94)}
+.cp.ok{
+  background:rgba(61,220,132,0.15);
+  color:#3ddc84;
+  border-color:rgba(61,220,132,0.4);
+}
+
+/* ===== EMPTY ===== */
+.empty{
+  text-align:center;padding:40px 20px;
+  color:var(--mut);font-size:13px;display:none;
+}
+.empty.show{display:block}
+.empty-icon{font-size:38px;margin-bottom:10px;opacity:.4}
+
+/* ===== BG DECOR ===== */
+.bg-orb{
+  position:fixed;border-radius:50%;
+  filter:blur(80px);pointer-events:none;
+  opacity:.4;z-index:-1;
+}
+.orb1{width:200px;height:200px;background:#ff7b3d;top:-60px;left:-60px}
+.orb2{width:170px;height:170px;background:#facc15;top:45%;right:-80px}
+.orb3{width:140px;height:140px;background:#ffb56b;bottom:-40px;left:20%}
+</style>
+</head><body>
+
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+<div class="bg-orb orb3"></div>
+
+<div class="top">
+  <a class="back" href="../apk.html">←</a>
+  <div class="title-wrap">
+    <div class="title">Nama Produk</div>
+    <div class="subtitle">Generator Brand &amp; Produk</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="f">
+    <label>Kategori / Kata Kunci</label>
+    <div class="input-wrap">
+      <span class="input-icon">🏷️</span>
+      <input id="k" placeholder="skincare, kopi, sepatu, hijab…" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="row" style="margin-bottom:12px">
+    <div class="f" style="margin-bottom:0">
+      <label>Gaya Brand</label>
+      <select id="s">
+        <option value="modern">✦ Modern</option>
+        <option value="premium">👑 Premium</option>
+        <option value="minimalis">◯ Minimalis</option>
+        <option value="natural">🌿 Natural</option>
+        <option value="fun">🎨 Fun &amp; Playful</option>
+        <option value="tech">⚡ Tech</option>
+        <option value="pro">💼 Profesional</option>
+      </select>
+    </div>
+    <div class="f" style="margin-bottom:0">
+      <label>Struktur</label>
+      <select id="pat">
+        <option value="auto">🎲 Auto</option>
+        <option value="pre-kata">Prefix + Kata</option>
+        <option value="kata-suf">Kata + Suffix</option>
+        <option value="pre-kata-suf">Prefix + Kata + Suffix</option>
+        <option value="kata-only">Kata Saja</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="f">
+    <label>Format</label>
+    <div class="toggle-row">
+      <button class="toggle-btn" data-sep=" " id="sepSpace">🅰️ Spasi</button>
+      <button class="toggle-btn" data-sep="" id="sepNone">🅱️ Rapat</button>
+      <button class="toggle-btn active" data-sep="auto" id="sepAuto">🎲 Auto</button>
+    </div>
+  </div>
+</div>
+
+<button class="go" id="gen">✨ Generate 12 Nama Produk</button>
+
+<div class="stats" id="stats" style="display:none">
+  <span class="stats-label">Hasil</span>
+  <span class="stats-count" id="count">0</span>
+</div>
+
+<div id="out"></div>
+
+<div class="empty" id="empty">
+  <div class="empty-icon">🏷️</div>
+  <div>Isi kata kunci &amp; tekan Generate</div>
+</div>
+
+<script src="../js/sfx.js"></script>
+  
+  <script>
+(function(){
+'use strict';
+
+// ============== WORD BANKS ==============
+var BANKS = {
+  modern: {
+    pre: ['Aero','Nova','Lux','Zea','Prime','Meta','Vibe','Zeal','Kira','Lyra',
+          'Eon','Sol','Nex','Ora','Kova','Vera','Zeno','Lumo','Yara','Runa',
+          'Eira','Sora','Tera','Vion','Alto'],
+    suf: ['Pro','Max','Lite','Plus','X','Ultra','Edge','Core','One','Elite',
+          'Neo','Wave','Hub','Lab','Studio','Works']
+  },
+  premium: {
+    pre: ['Aurel','Verona','Celest','Lumi','Eleg','Noir','Blanc','Oro','Velvet','Ivory',
+          'Regal','Royale','Aurum','Opal','Pearl','Sterling','Belle','Sage','Lustre','Grand',
+          'Monar','Seren','Aristo','Nobil','Dia'],
+    suf: ['Signature','Reserve','Prestige','Deluxe','Supreme','Elite','Couture','Atelier',
+          'Maison','Collection','Heritage','Noble','Rare','Legacy','Imperial','Crown']
+  },
+  minimalis: {
+    pre: ['','','','',''],
+    suf: ['','','','',''],
+    // minimalis lebih ke kata tunggal, dibangun dari kombinasi huruf pendek
+    core: ['Æon','Kai','Aru','Vio','Ren','Nao','Yui','Sei','Iro','Lea',
+           'Una','Rin','Ode','Eos','Ara','Mio','Iya','Eon','Lua','Nea',
+           'Sia','Noa','Aza','Kio','Vea']
+  },
+  natural: {
+    pre: ['Terra','Vera','Silva','Flora','Herba','Lotus','Bamboo','Cedar','Jade','Basil',
+          'Mint','Sage','Ivy','Willow','Aspen','Fern','Maple','Amber','Coral','River',
+          'Rain','Soleil','Luna','Aurora','Zephyr'],
+    suf: ['Organics','Botanica','Naturals','Roots','Leaf','Garden','Harvest','Bloom',
+          'Grove','Meadow','Earth','Forest','Field','Spring','Valley','Orchard']
+  },
+  fun: {
+    pre: ['Bubbly','Jelly','Bouncy','Zippy','Happy','Sunny','Cheery','Snappy','Sparky','Breezy',
+          'Fuzzy','Zesty','Chirpy','Peppy','Perky','Dizzy','Froggy','Buzzy','Nifty','Jolly',
+          'Wiggly','Squishy','Giggly','Merry','Tasty'],
+    suf: ['Squad','Club','Gang','Pop','Box','Snack','Joy','Wave','Beat','Pals',
+          'Crew','Buddies','Party','Fun','Buzz','Rush']
+  },
+  tech: {
+    pre: ['Byte','Hex','Nano','Bit','Quan','Sync','Grid','Code','Data','Vox',
+          'Krypt','Pulse','Rift','Sig','Tera','Zen','Zero','Glitch','Node','Loop',
+          'Fusion','Vector','Quantum','Cyber','Neural'],
+    suf: ['OS','AI','IO','Core','Sys','Net','Bot','Chip','Bit','Byte',
+          'Tech','Lab','Logic','Engine','Drive','Stack','Grid','Stream','Flow','Link']
+  },
+  pro: {
+    pre: ['Global','Trust','Prime','Unified','Optima','Veritas','Summit','Vertex','Apex','Pinnacle',
+          'Crest','Peak','Vanguard','Meridian','Pioneer','Anchor','Compass','Compass','Sterling','North',
+          'Alliance','Consolid','Foundry','Insight','Clarity'],
+    suf: ['Group','Corp','Partners','Solutions','Enterprise','Systems','Holdings','Associates',
+          'Consulting','Industries','International','Network','Ventures','Services','Professionals','Business']
+  }
+};
+
+// ============== POLA STRUKTUR ==============
+var PATTERNS = {
+  'pre-kata':        ['{P}{S}{K}'],
+  'kata-suf':        ['{K}{S}{U}'],
+  'pre-kata-suf':    ['{P}{S}{K}{S}{U}','{P}{K}{U}'],
+  'kata-only':       ['{K}','{K}{U}'],
+  'auto':            ['{P}{S}{K}','{K}{S}{U}','{P}{S}{K}{S}{U}','{P}{K}{U}','{P}{K}','{K}{U}','{K}']
+};
+
+// ============== SEPARATOR ==============
+var SEPS = [' ', '', '·', '-', '_'];
+
+// ============== DEKORASI (hanya gaya tertentu) ==============
+var DECOS = {
+  modern:    [{pre:'',post:''},{pre:'',post:''},{pre:'',post:''},{pre:'✦',post:''},{pre:'',post:''}],
+  premium:   [{pre:'',post:''},{pre:'◈',post:'◈'},{pre:'✦',post:'✦'},{pre:'「',post:'」'},{pre:'',post:''}],
+  minimalis: [{pre:'',post:''},{pre:'',post:''},{pre:'·',post:'·'},{pre:'',post:''}],
+  natural:   [{pre:'',post:''},{pre:'🌿',post:''},{pre:'',post:'🌱'},{pre:'',post:''}],
+  fun:       [{pre:'',post:''},{pre:'✨',post:'✨'},{pre:'🎈',post:''},{pre:'',post:'🎉'}],
+  tech:      [{pre:'',post:''},{pre:'⌬',post:'⌬'},{pre:'',post:'_'},{pre:'[',post:']'}],
+  pro:       [{pre:'',post:''},{pre:'',post:''},{pre:'',post:''},{pre:'—',post:'—'}]
+};
+
+// ============== UTILS ==============
+function rnd(a){return a[Math.floor(Math.random()*a.length)]}
+function cap(s){return s ? s.charAt(0).toUpperCase()+s.slice(1) : s}
+function titleCase(s){
+  return s.split(' ').map(function(w){
+    return w ? w.charAt(0).toUpperCase()+w.slice(1).toLowerCase() : w;
+  }).join(' ');
+}
+
+// ============== GENERATOR ==============
+function generate(kata, gaya, patMode, sepMode){
+  var bank = BANKS[gaya] || BANKS.modern;
+  var kataCap = cap(kata);
+
+  // Separator
+  var sep;
+  if(sepMode === 'auto') sep = rnd(SEPS);
+  else sep = sepMode;
+
+  // Untuk minimalis, pakai 'core' saja sebagai prefiks kreatif
+  var P = bank.pre ? rnd(bank.pre) : '';
+  var U = bank.suf ? rnd(bank.suf) : '';
+  if(gaya === 'minimalis'){
+    P = '';
+    U = rnd(bank.core);
+  }
+
+  // Pattern
+  var pats = PATTERNS[patMode] || PATTERNS.auto;
+  var tpl = rnd(pats);
+
+  var txt = tpl
+    .replace('{P}', P)
+    .replace('{K}', kataCap)
+    .replace('{U}', U)
+    .replace(/\{S\}/g, sep);
+
+  // Rapikan spasi double / leading/trailing
+  txt = txt.replace(/\s+/g, ' ').trim();
+
+  // Dekorasi (hanya untuk beberapa output, biar gak spam)
+  if(Math.random() < 0.35){
+    var D = rnd(DECOS[gaya] || DECOS.modern);
+    txt = D.pre + txt + D.post;
+  }
+
+  return txt;
+}
+
+// ============== UI LOGIC ==============
+var inputK = document.getElementById('k');
+var selStyle = document.getElementById('s');
+var selPat = document.getElementById('pat');
+var out = document.getElementById('out');
+var empty = document.getElementById('empty');
+var stats = document.getElementById('stats');
+var countEl = document.getElementById('count');
+var btnGen = document.getElementById('gen');
+
+var sepMode = 'auto';
+var btnSpace = document.getElementById('sepSpace');
+var btnNone = document.getElementById('sepNone');
+var btnAuto = document.getElementById('sepAuto');
+
+function setSep(mode, btn){
+  sepMode = mode;
+  [btnSpace, btnNone, btnAuto].forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  if(window.SFX && SFX.tap) SFX.tap();
+}
+btnSpace.addEventListener('click', function(){ setSep(' ', btnSpace); });
+btnNone.addEventListener('click', function(){ setSep('', btnNone); });
+btnAuto.addEventListener('click', function(){ setSep('auto', btnAuto); });
+
+// Copy helper
+function attachCopy(row, txt){
+  var btn = row.querySelector('.cp');
+  btn.addEventListener('click', function(){
+    var done = function(){
+      btn.textContent = '✓ OK';
+      btn.classList.add('ok');
+      if(window.SFX && SFX.pickup) SFX.pickup();
+      else if(window.SFX && SFX.tap) SFX.tap();
+      setTimeout(function(){
+        btn.textContent = 'Copy';
+        btn.classList.remove('ok');
+      }, 1300);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done).catch(done);
+    } else {
+      try{
+        var ta = document.createElement('textarea');
+        ta.value = txt;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }catch(e){}
+      done();
+    }
+  });
+}
+
+// Generate
+var COUNT = 12;
+btnGen.addEventListener('click', function(){
+  var kata = inputK.value.trim();
+  if(!kata){
+    inputK.focus();
+    if(window.SFX && SFX.err) SFX.err();
+    inputK.style.borderColor = '#ff7b3d';
+    setTimeout(function(){ inputK.style.borderColor = ''; }, 500);
+    return;
+  }
+
+  var gaya = selStyle.value;
+  var patMode = selPat.value;
+
+  out.innerHTML = '';
+  empty.classList.remove('show');
+
+  var seen = {};
+  var n = 0;
+  var attempts = 0;
+  var frag = document.createDocumentFragment();
+
+  while(n < COUNT && attempts < COUNT * 40){
+    attempts++;
+    var name = generate(kata, gaya, patMode, sepMode);
+    if(!name || seen[name]) continue;
+    seen[name] = 1;
+
+    var row = document.createElement('div');
+    row.className = 'item';
+    row.style.animationDelay = (n * 35) + 'ms';
+    row.innerHTML = '<span></span><button class="cp">Copy</button>';
+    row.querySelector('span').textContent = name;
+    attachCopy(row, name);
+    frag.appendChild(row);
+    n++;
+  }
+
+  out.appendChild(frag);
+  stats.style.display = 'flex';
+  countEl.textContent = n + ' nama';
+
+  if(window.SFX && SFX.win) SFX.win();
+  else if(window.SFX && SFX.ok) SFX.ok();
+});
+
+// Enter = generate
+inputK.addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ e.preventDefault(); btnGen.click(); }
+});
+
+// Auto focus
+setTimeout(function(){ inputK.focus(); }, 300);
+
+})();
+</script>
+  
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('../sw.js', { scope: '../' })
+        .then(reg => console.log('[PWA] SW registered:', reg.scope))
+        .catch(err => console.warn('[PWA] SW failed:', err));
+    });
+  }
+</script>
+</body></html>

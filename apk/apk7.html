@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Deskripsi Produk · RubyEngine</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#22d3ee">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RubyEngine">
+<link rel="apple-touch-icon" href="../image/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../image/icon-192.png">
+
+<style>
+:root{
+  --bg:#04121a;--card:rgba(255,255,255,0.04);--card-solid:#0a2030;
+  --fg:#e0f4ff;--mut:#5d8ba8;
+  --acc:#22d3ee;--acc2:#38bdf8;
+  --line:rgba(34,211,238,0.16);
+  --grad:linear-gradient(135deg,#22d3ee,#38bdf8);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34,211,238,0.20), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 30%, rgba(56,189,248,0.12), transparent);
+  color:var(--fg);
+  min-height:100dvh;
+  padding:16px;
+  padding-top:calc(16px + env(safe-area-inset-top));
+  padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  overflow-x:hidden;
+}
+
+/* TOP */
+.top{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.back{
+  width:42px;height:42px;border-radius:14px;
+  border:1px solid var(--line);
+  background:var(--card);backdrop-filter:blur(10px);
+  display:grid;place-items:center;color:var(--fg);
+  text-decoration:none;font-size:20px;flex-shrink:0;
+  transition:all .2s;
+}
+.back:active{transform:scale(.92);background:rgba(34,211,238,0.12)}
+.title-wrap{display:flex;flex-direction:column;gap:2px}
+.title{
+  font-size:17px;font-weight:800;letter-spacing:-0.01em;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent;
+}
+.subtitle{font-size:11px;color:var(--mut);letter-spacing:.06em;font-weight:600;text-transform:uppercase}
+
+/* CARD */
+.card{
+  background:var(--card);backdrop-filter:blur(14px);
+  border:1px solid var(--line);border-radius:18px;
+  padding:16px;margin-bottom:14px;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(400px circle at 50% 0%, rgba(34,211,238,0.10), transparent 60%);
+  pointer-events:none;
+}
+
+/* FORM */
+.f{margin-bottom:12px;position:relative;z-index:1}
+.f:last-child{margin-bottom:0}
+.f label{
+  display:block;font-size:11px;color:var(--mut);
+  margin-bottom:6px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.f input,.f textarea{
+  width:100%;padding:13px 14px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  color:var(--fg);font-size:14.5px;
+  font-family:inherit;font-weight:600;
+  transition:all .2s;resize:vertical;
+}
+.f textarea{min-height:56px;line-height:1.5}
+.f input:focus,.f textarea:focus{
+  outline:none;border-color:rgba(34,211,238,0.5);
+  background:rgba(34,211,238,0.06);
+  box-shadow:0 0 0 4px rgba(34,211,238,0.10);
+}
+.f input::placeholder,.f textarea::placeholder{color:var(--mut);font-weight:400}
+
+/* CHIPS */
+.chips-row{
+  display:flex;gap:8px;overflow-x:auto;
+  padding-bottom:4px;
+  scrollbar-width:none;-ms-overflow-style:none;
+  position:relative;z-index:1;
+}
+.chips-row::-webkit-scrollbar{display:none}
+.chip{
+  flex-shrink:0;padding:9px 15px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  color:var(--mut);
+  font-family:inherit;font-size:12.5px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  white-space:nowrap;
+}
+.chip:active{transform:scale(.95)}
+.chip.active{
+  background:rgba(34,211,238,0.15);
+  border-color:rgba(34,211,238,0.5);
+  color:var(--acc);
+  box-shadow:0 0 20px rgba(34,211,238,0.25);
+}
+
+/* BUTTON */
+.go{
+  width:100%;padding:16px;border-radius:14px;
+  background:var(--grad);
+  color:#04121a;font-size:15px;font-weight:800;
+  letter-spacing:.03em;
+  border:none;font-family:inherit;cursor:pointer;
+  box-shadow:0 10px 30px -8px rgba(34,211,238,0.5),
+             inset 0 1px 0 rgba(255,255,255,0.3);
+  transition:transform .15s, box-shadow .2s;
+  margin-bottom:16px;position:relative;overflow:hidden;
+}
+.go::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg, rgba(255,255,255,0.3), transparent 55%);
+  pointer-events:none;
+}
+.go:active{
+  transform:scale(.97);
+  box-shadow:0 4px 16px -4px rgba(34,211,238,0.6);
+}
+
+/* RESULT */
+.result-wrap{display:none;position:relative;animation:up .35s cubic-bezier(.4,0,.2,1) both}
+.result-wrap.show{display:block}
+@keyframes up{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
+.res{
+  padding:18px;border-radius:16px;
+  background:rgba(255,255,255,0.035);
+  border:1px solid var(--line);
+  font-size:13.5px;line-height:1.7;
+  white-space:pre-wrap;word-break:break-word;
+  color:var(--fg);
+  max-height:60vh;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.res::-webkit-scrollbar{width:4px}
+.res::-webkit-scrollbar-thumb{background:rgba(34,211,238,0.3);border-radius:2px}
+
+/* FLOATING COPY */
+.cp-fab{
+  position:absolute;top:10px;right:10px;
+  width:36px;height:36px;border-radius:11px;
+  background:rgba(34,211,238,0.15);
+  border:1px solid rgba(34,211,238,0.35);
+  color:var(--acc);
+  display:grid;place-items:center;
+  cursor:pointer;font-family:inherit;
+  font-size:16px;
+  transition:all .2s;
+  backdrop-filter:blur(8px);
+}
+.cp-fab:active{transform:scale(.9)}
+.cp-fab.ok{
+  background:rgba(61,220,132,0.18);
+  border-color:rgba(61,220,132,0.5);
+  color:#3ddc84;
+}
+
+/* EMPTY */
+.empty{
+  text-align:center;padding:40px 20px;
+  color:var(--mut);font-size:13px;
+}
+.empty-icon{font-size:38px;margin-bottom:10px;opacity:.4}
+
+/* ORB */
+.orb{
+  position:fixed;border-radius:50%;
+  filter:blur(80px);pointer-events:none;
+  opacity:.35;z-index:-1;
+}
+.orb1{width:200px;height:200px;background:#22d3ee;top:-60px;left:-60px}
+.orb2{width:160px;height:160px;background:#38bdf8;bottom:-40px;right:-60px}
+</style>
+</head><body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="top">
+  <a class="back" href="../apk.html">←</a>
+  <div class="title-wrap">
+    <div class="title">Deskripsi Produk</div>
+    <div class="subtitle">Generator Copywriting</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="f">
+    <label>Nama Produk</label>
+    <input id="n" placeholder="Kopi Arabika Gayo" autocomplete="off">
+  </div>
+  <div class="f">
+    <label>Kategori</label>
+    <input id="k" placeholder="Minuman, Skincare, Fashion…" autocomplete="off">
+  </div>
+  <div class="f">
+    <label>Keunggulan <span style="opacity:.6;font-weight:400;text-transform:none;letter-spacing:0">(pisah koma)</span></label>
+    <textarea id="kl" rows="2" placeholder="aroma kuat, tanpa gula, kemasan 250gr"></textarea>
+  </div>
+</div>
+
+<div class="card">
+  <div class="f">
+    <label>Gaya Bahasa</label>
+    <div class="chips-row" id="toneRow">
+      <button class="chip active" data-tone="profesional">💼 Profesional</button>
+      <button class="chip" data-tone="santai">😎 Santai</button>
+      <button class="chip" data-tone="mewah">👑 Mewah</button>
+      <button class="chip" data-tone="lucu">😄 Lucu</button>
+      <button class="chip" data-tone="story">📖 Storytelling</button>
+      <button class="chip" data-tone="hard">🔥 Hard-Sell</button>
+      <button class="chip" data-tone="soft">🌸 Soft-Sell</button>
+      <button class="chip" data-tone="singkat">⚡ Singkat</button>
+    </div>
+  </div>
+  <div class="f" style="margin-top:12px">
+    <label>Panjang</label>
+    <div class="chips-row" id="lenRow">
+      <button class="chip" data-len="pendek">Pendek</button>
+      <button class="chip active" data-len="sedang">Sedang</button>
+      <button class="chip" data-len="panjang">Panjang</button>
+    </div>
+  </div>
+</div>
+
+<button class="go" id="gen">✨ Generate Deskripsi</button>
+
+<div class="empty" id="empty">
+  <div class="empty-icon">✍️</div>
+  <div>Isi nama produk &amp; kategori, lalu tekan Generate</div>
+</div>
+
+<div class="result-wrap" id="resWrap">
+  <div class="res" id="out"></div>
+  <button class="cp-fab" id="cp" title="Copy">📋</button>
+</div>
+
+<script src="../js/sfx.js"></script>
+  
+  <script>
+(function(){
+'use strict';
+
+// ============== TEMPLATE BANKS (8 gaya × 6-8 variasi per slot) ==============
+var TONES = {
+
+  profesional: {
+    emoji:['💼','📋','🎯'],
+    bullets:['•','▸','✓'],
+    opens:[
+      '{nama} adalah solusi {kat} yang dirancang untuk kebutuhan profesional Anda.',
+      'Hadir sebagai pilihan {kat} terpercaya, {nama} siap memenuhi standar tertinggi.',
+      'Tingkatkan kualitas {kat} Anda bersama {nama}.',
+      'Dengan {nama}, pengalaman {kat} menjadi lebih efisien dan optimal.',
+      '{nama} — pilihan utama untuk {kat} yang mengutamakan kualitas.',
+      'Sebagai produk {kat} unggulan, {nama} memberikan nilai lebih di setiap detailnya.',
+      'Kenali {nama}, inovasi terbaru di bidang {kat} yang dirancang untuk Anda.'
+    ],
+    mids:[
+      'Setiap elemen diperhatikan secara cermat untuk menghadirkan hasil terbaik.',
+      'Dirancang dengan standar tinggi untuk memenuhi ekspektasi pengguna modern.',
+      'Kombinasi kualitas dan fungsi menjadikan {nama} pilihan yang tepat.',
+      'Kami berkomitmen menghadirkan {kat} yang andal dan berkualitas.',
+      'Pengembangan produk dilakukan melalui riset mendalam dan uji kualitas.'
+    ],
+    closes:[
+      'Cocok untuk Anda yang menghargai kualitas dan konsistensi.',
+      'Solusi tepat untuk kebutuhan {kat} sehari-hari maupun profesional.',
+      'Pilihan cerdas bagi Anda yang menginginkan hasil maksimal.'
+    ],
+    ctas:[
+      'Dapatkan {nama} sekarang dan rasakan perbedaannya.',
+      'Pesan hari ini untuk pengalaman {kat} yang lebih baik.',
+      'Segera miliki {nama} sebelum kehabisan.',
+      'Hubungi kami untuk informasi lebih lanjut.'
+    ]
+  },
+
+  santai: {
+    emoji:['😎','✨','🙌'],
+    bullets:['•','→','✅'],
+    opens:[
+      'Kenalin nih, {nama} — {kat} yang bakal bikin harimu makin gampang!',
+      'Buat kamu yang lagi cari {kat} kece, {nama} jawabannya.',
+      '{nama} hadir buat nemenin aktivitas {kat} kamu sehari-hari.',
+      'Ada yang baru nih di dunia {kat}: {nama}!',
+      'Penasaran {kat} yang satu ini? Yuk kenalan sama {nama}.',
+      '{nama} = {kat} yang simpel, enak dipakai, dan bikin happy.'
+    ],
+    mids:[
+      'Simpel banget dipakai, gak ribet, dan pastinya bikin nyaman.',
+      'Kualitasnya oke punya, harganya juga ramah di kantong.',
+      'Cocok banget buat kamu yang suka hal-hal praktis.',
+      'Udah banyak yang pakai dan puas — sekarang giliran kamu!'
+    ],
+    closes:[
+      'Pokoknya worth it banget buat dicoba.',
+      'Dijamin gak nyesel deh!',
+      'Yuk, cobain sendiri serunya.'
+    ],
+    ctas:[
+      'Yuk, checkout {nama} sekarang! 🛒',
+      'Gas pesan sebelum kehabisan!',
+      'Klik order dan rasakan bedanya.',
+      'Buruan ambil {nama} hari ini!'
+    ]
+  },
+
+  mewah: {
+    emoji:['👑','✦','◈'],
+    bullets:['—','◆','·'],
+    opens:[
+      'Mempersembahkan {nama}, sebuah mahakarya di dunia {kat}.',
+      '{nama} menghadirkan kemewahan yang sesungguhnya dalam setiap detailnya.',
+      'Sebuah pengalaman {kat} eksklusif, hanya untuk Anda yang istimewa.',
+      'Diciptakan untuk mereka yang memahami arti kualitas sesungguhnya.',
+      '{nama} — simbol keanggunan dan prestise di kelas {kat}.',
+      'Perkenalkan standar baru dalam {kat}, hanya dari {nama}.'
+    ],
+    mids:[
+      'Setiap elemen dirancang dengan presisi oleh para ahli berpengalaman.',
+      'Material pilihan terbaik menjadi fondasi dari keunggulan {nama}.',
+      'Sebuah karya yang memadukan estetika, fungsi, dan keunggulan tanpa kompromi.',
+      'Dipersembahkan bagi Anda yang tidak pernah puas dengan yang biasa.'
+    ],
+    closes:[
+      'Inilah definisi kemewahan sejati dalam bentuk {kat}.',
+      'Untuk Anda yang berhak mendapatkan yang terbaik.',
+      'Satu sentuhan eksklusif yang akan mengubah perspektif Anda.'
+    ],
+    ctas:[
+      'Miliki {nama} dan rasakan pengalaman yang tak tertandingi.',
+      'Pesan eksklusif {nama} hari ini.',
+      'Jadilah bagian dari lingkaran istimewa pemilik {nama}.',
+      'Dapatkan keistimewaan yang hanya dimiliki segelintir orang.'
+    ]
+  },
+
+  lucu: {
+    emoji:['😄','🤩','🎉'],
+    bullets:['•','👉','🎯'],
+    opens:[
+      'Bosen sama {kat} yang gitu-gitu aja? Kenalin deh, {nama}!',
+      'POV: kamu baru ketemu {kat} yang bakal bikin hidup lebih seru → {nama}.',
+      '{nama} bukan sembarang {kat}, dia datang dengan misi bikin kamu senyum.',
+      'Rumor bilang, {nama} itu {kat} paling "oke punya" tahun ini 👀',
+      'Kamu gak salah pilih kalau {nama} jadi pilihan {kat} kamu.',
+      'Sekali coba {nama}, dijamin pengen nambah terus!'
+    ],
+    mids:[
+      'Dipakai nyaman, dilihat oke, harga juga gak bikin sedih.',
+      'Kata user: "Gak nyesel deh, worth banget!"',
+      'Gak perlu mikir lama — cocok buat kamu yang suka praktis.',
+      'Level kece: 10/10. Level ribet: 0/10.'
+    ],
+    closes:[
+      'Yakin deh, sekali coba bakal susah move on.',
+      'Simpel, seru, dan bikin happy. Apa lagi yang kurang?',
+      'Ini bukan iklan, ini rekomendasi tulus 😌'
+    ],
+    ctas:[
+      'Yuk checkout {nama} sekarang sebelum menyesal!',
+      'Gaskeun ambil {nama}, ready stock!',
+      'Klik order, nanti kamu bakal bilang makasih 😎',
+      'Buruan, sebelum temenmu nyomot duluan!'
+    ]
+  },
+
+  story: {
+    emoji:['📖','🌅','✨'],
+    bullets:['•','—','◆'],
+    opens:[
+      'Ada cerita di balik setiap {kat} — dan inilah kisah {nama}.',
+      'Suatu hari, kami berpikir: bagaimana kalau {kat} bisa lebih baik lagi?',
+      '{nama} lahir dari sebuah keresahan sederhana: {kat} yang membosankan.',
+      'Di balik {nama}, ada mimpi untuk menghadirkan {kat} yang lebih bermakna.',
+      'Setiap produk punya cerita. Inilah cerita {nama}.',
+      'Dulu, {kat} hanya sekedar fungsi. Sekarang, {nama} menjadikannya pengalaman.'
+    ],
+    mids:[
+      'Kami melewati puluhan percobaan sebelum akhirnya menemukan formula terbaik.',
+      'Tidak ada yang instan — semua dibangun dengan ketekunan dan perhatian.',
+      'Setiap detail punya alasan. Setiap pilihan punya cerita.',
+      'Kami mendengar, belajar, lalu menciptakan sesuatu yang lebih baik.'
+    ],
+    closes:[
+      'Dan sekarang, kami bangga mempersembahkan {nama} untuk Anda.',
+      'Ini bukan sekadar {kat} — ini hasil dari sebuah perjalanan.',
+      'Karena bagi kami, kualitas adalah sebuah komitmen, bukan sekadar kata.'
+    ],
+    ctas:[
+      'Jadilah bagian dari cerita {nama}.',
+      'Miliki {nama} dan tulis cerita Anda sendiri.',
+      'Mulai perjalanan Anda bersama {nama} hari ini.',
+      'Karena setiap cerita hebat dimulai dari langkah pertama.'
+    ]
+  },
+
+  hard: {
+    emoji:['🔥','⚡','💥'],
+    bullets:['🔥','✅','▶'],
+    opens:[
+      'STOP! Ini yang selama ini kamu cari — {nama}!',
+      'Jangan beli {kat} sebelum baca ini! {nama} adalah game-changer.',
+      'PROMO TERBATAS! {nama} hadir dengan penawaran spesial.',
+      'Jangan sampai menyesal karena tidak punya {nama}!',
+      'Ini bukan {kat} biasa — ini {nama}, dan ini beda!',
+      'HANYA HARI INI! {nama} dengan harga spesial!',
+      '{nama} — {kat} yang wajib kamu punya SEKARANG!'
+    ],
+    mids:[
+      'Stok terbatas! Setiap menit yang kamu tunda, orang lain sudah check out.',
+      'Sudah 1000+ orang membuktikan kualitasnya. Sekarang giliran kamu!',
+      'Harga bisa naik kapan saja — jangan sampai kelewatan!',
+      'Ini investasi terbaik yang bisa kamu lakukan hari ini.'
+    ],
+    closes:[
+      'Jangan sampai kehabisan seperti yang lain!',
+      'Ini kesempatan yang tidak datang dua kali.',
+      'Yang gercep, dia yang dapat!'
+    ],
+    ctas:[
+      '🛒 KLIK ORDER SEKARANG! Jangan tunda lagi!',
+      '⚡ BURUAN! Stok tinggal sedikit!',
+      '🔥 CHECKOUT SEKARANG sebelum menyesal!',
+      '▶ AMBIL SEKARANG! Harga naik besok!'
+    ]
+  },
+
+  soft: {
+    emoji:['🌸','🌿','✨'],
+    bullets:['·','•','—'],
+    opens:[
+      'Mungkin {nama} bisa jadi pilihan yang tepat untuk Anda.',
+      'Jika Anda sedang mencari {kat} yang tulus dibuat, izinkan kami memperkenalkan {nama}.',
+      'Dengan lembut, kami hadirkan {nama} untuk menemani hari-hari Anda.',
+      '{nama} — sebuah {kat} yang dibuat dengan hati.',
+      'Kami percaya {kat} terbaik lahir dari ketulusan. Itulah {nama}.',
+      'Bila Anda menghargai kualitas yang tenang, {nama} mungkin cocok untuk Anda.'
+    ],
+    mids:[
+      'Dibuat dengan penuh perhatian, tanpa tergesa-gesa.',
+      'Kami tidak mengejar banyak, hanya ingin memberi yang terbaik.',
+      'Setiap detail kami rancang agar Anda merasa nyaman.',
+      'Bukan yang paling ramai, tapi kami percaya pada kualitas.'
+    ],
+    closes:[
+      'Silakan pertimbangkan dengan tenang — kami percaya Anda akan menyukainya.',
+      'Tidak ada paksaan. Kami hanya ingin berbagi sesuatu yang baik.',
+      'Jika cocok, kami akan senang hati melayani Anda.'
+    ],
+    ctas:[
+      'Jika berkenan, silakan lihat {nama} lebih dekat.',
+      'Kami siap membantu kapan pun Anda siap.',
+      'Terima kasih telah meluangkan waktu untuk mengenal {nama}.',
+      'Dengan senang hati, kami menanti Anda.'
+    ]
+  },
+
+  singkat: {
+    emoji:['⚡','·'],
+    bullets:['•'],
+    opens:[
+      '{nama} — {kat} yang beda.',
+      'Kenalan sama {nama}.',
+      '{nama}: simpel, berkualitas, worth it.',
+      '{kat} terbaik? {nama} jawabannya.'
+    ],
+    mids:[
+      'Kualitas oke. Harga ramah.',
+      'Simpel. Elegan. Fungsional.',
+      'Dibuat untuk kamu.'
+    ],
+    closes:[
+      'Coba dulu, baru nilai.',
+      'Sekali pakai, langsung paham.'
+    ],
+    ctas:[
+      'Order sekarang.',
+      'Checkout {nama}.',
+      'Ambil sekarang.'
+    ]
+  }
+};
+
+// ============== UTILS ==============
+function rnd(a){return a[Math.floor(Math.random()*a.length)]}
+function cap(s){return s ? s.charAt(0).toUpperCase()+s.slice(1) : s}
+function fill(tpl, nama, kat){
+  return tpl.replace(/\{nama\}/g, nama).replace(/\{kat\}/g, kat);
+}
+
+// ============== GENERATOR ==============
+function generate(nama, kat, keunggulan, tone, len){
+  var T = TONES[tone] || TONES.profesional;
+  var emoji = rnd(T.emoji);
+  var bullet = rnd(T.bullets);
+  var open = fill(rnd(T.opens), nama, kat);
+  var mid = fill(rnd(T.mids), nama, kat);
+  var close = fill(rnd(T.closes), nama, kat);
+  var cta = fill(rnd(T.ctas), nama, kat);
+  var parts = [];
+
+  // Bullet list dari keunggulan
+  var bl = keunggulan.map(function(x){ return bullet + ' ' + cap(x); }).join('\n');
+
+  if(len === 'pendek'){
+    parts.push(emoji + ' ' + open);
+    if(keunggulan.length) parts.push(keunggulan.slice(0,2).map(function(x){ return bullet + ' ' + cap(x); }).join('\n'));
+    parts.push(cta);
+  }
+  else if(len === 'sedang'){
+    parts.push(emoji + ' ' + open);
+    if(keunggulan.length) parts.push('Keunggulan:\n' + bl);
+    parts.push(mid);
+    parts.push(close);
+    parts.push(cta);
+  }
+  else { // panjang
+    parts.push(emoji + '  ' + nama.toUpperCase() + '  ' + emoji);
+    parts.push(open);
+    if(keunggulan.length) parts.push('Keunggulan utama:\n' + bl);
+    parts.push(mid);
+    parts.push(fill(rnd(T.mids), nama, kat));
+    parts.push(close);
+    parts.push(cta);
+  }
+
+  return parts.filter(Boolean).join('\n\n');
+}
+
+// ============== UI LOGIC ==============
+var inputN = document.getElementById('n');
+var inputK = document.getElementById('k');
+var inputKL = document.getElementById('kl');
+var toneRow = document.getElementById('toneRow');
+var lenRow = document.getElementById('lenRow');
+var btnGen = document.getElementById('gen');
+var out = document.getElementById('out');
+var resWrap = document.getElementById('resWrap');
+var empty = document.getElementById('empty');
+var btnCp = document.getElementById('cp');
+
+var tone = 'profesional';
+var len = 'sedang';
+
+toneRow.addEventListener('click', function(e){
+  var btn = e.target.closest('.chip');
+  if(!btn) return;
+  toneRow.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('active'); });
+  btn.classList.add('active');
+  tone = btn.getAttribute('data-tone');
+  if(window.SFX && SFX.tap) SFX.tap();
+});
+
+lenRow.addEventListener('click', function(e){
+  var btn = e.target.closest('.chip');
+  if(!btn) return;
+  lenRow.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('active'); });
+  btn.classList.add('active');
+  len = btn.getAttribute('data-len');
+  if(window.SFX && SFX.tap) SFX.tap();
+});
+
+btnGen.addEventListener('click', function(){
+  var nama = inputN.value.trim();
+  var kat = inputK.value.trim();
+
+  if(!nama){
+    inputN.focus();
+    if(window.SFX && SFX.err) SFX.err();
+    inputN.style.borderColor = '#f472b6';
+    setTimeout(function(){ inputN.style.borderColor = ''; }, 600);
+    return;
+  }
+  if(!kat){
+    inputK.focus();
+    if(window.SFX && SFX.err) SFX.err();
+    inputK.style.borderColor = '#f472b6';
+    setTimeout(function(){ inputK.style.borderColor = ''; }, 600);
+    return;
+  }
+
+  var keunggulan = inputKL.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+
+  var result = generate(nama, kat, keunggulan, tone, len);
+  out.textContent = result;
+
+  empty.style.display = 'none';
+  resWrap.classList.remove('show');
+  void resWrap.offsetWidth; // trigger reflow untuk restart animasi
+  resWrap.classList.add('show');
+
+  if(window.SFX && SFX.win) SFX.win();
+  else if(window.SFX && SFX.ok) SFX.ok();
+});
+
+// Copy
+btnCp.addEventListener('click', function(){
+  var txt = out.textContent;
+  var done = function(){
+    btnCp.textContent = '✓';
+    btnCp.classList.add('ok');
+    if(window.SFX && SFX.pickup) SFX.pickup();
+    else if(window.SFX && SFX.tap) SFX.tap();
+    setTimeout(function(){
+      btnCp.textContent = '📋';
+      btnCp.classList.remove('ok');
+    }, 1300);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(done);
+  } else {
+    try{
+      var ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }catch(e){}
+    done();
+  }
+});
+
+// Enter di input nama = fokus ke kategori
+inputN.addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ e.preventDefault(); inputK.focus(); }
+});
+inputK.addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ e.preventDefault(); btnGen.click(); }
+});
+
+setTimeout(function(){ inputN.focus(); }, 300);
+
+})();
+</script>
+  
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('../sw.js', { scope: '../' })
+        .then(reg => console.log('[PWA] SW registered:', reg.scope))
+        .catch(err => console.warn('[PWA] SW failed:', err));
+    });
+  }
+</script>
+</body></html>
