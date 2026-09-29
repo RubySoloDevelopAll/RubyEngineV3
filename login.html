@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Login — RubyEngine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+
+<!-- ====== PWA META ====== -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c5cff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RubyEngine">
+<link rel="apple-touch-icon" href="image/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="image/icon-192.png">
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body { height: 100%; }
+
+  body.auth-body {
+    background: #05060a;
+    color: #fff;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100dvh;
+    overflow-x: clip;
+    overflow-y: visible;
+    position: relative;
+    text-rendering: optimizeSpeed;
+  }
+
+  /* Background grid halus */
+  body.auth-body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(124,92,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34,211,238,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 85%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 85%);
+  }
+
+  /* Blob dekorasi */
+  .auth-decor {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .auth-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.5;
+    will-change: transform;
+  }
+  .auth-blob.b1 {
+    top: -25%; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(124,92,255,0.35), transparent 70%);
+    animation: authFloat1 12s ease-in-out infinite;
+  }
+  .auth-blob.b2 {
+    bottom: -25%; right: -15%;
+    width: 480px; height: 480px;
+    background: radial-gradient(circle, rgba(34,211,238,0.20), transparent 70%);
+    animation: authFloat2 15s ease-in-out infinite;
+  }
+  @keyframes authFloat1 {
+    0%, 100% { transform: translateX(-50%) translateY(0) scale(1); }
+    50%      { transform: translateX(-50%) translateY(-20px) scale(1.05); }
+  }
+  @keyframes authFloat2 {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50%      { transform: translate(-15px,-25px) scale(1.08); }
+  }
+
+  /* Wrap */
+  .auth-wrap {
+    position: relative;
+    z-index: 1;
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: 32px 20px;
+  }
+
+  /* Card */
+  .auth-card {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    padding: 36px 30px 32px;
+    border-radius: 22px;
+    background:
+      radial-gradient(140% 100% at 50% 0%, rgba(124,92,255,0.10), transparent 55%),
+      linear-gradient(180deg, #0d101a 0%, #08090f 100%);
+    border: 1px solid rgba(124,92,255,0.28);
+    box-shadow:
+      0 30px 80px -20px rgba(0,0,0,0.8),
+      0 0 0 1px rgba(124,92,255,0.05),
+      0 0 60px -30px rgba(124,92,255,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+    animation: authCardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    overflow: hidden;
+  }
+  .auth-card::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: 50%;
+    transform: translateX(-50%);
+    width: 340px; height: 340px;
+    background: radial-gradient(circle, rgba(124,92,255,0.22), transparent 60%);
+    pointer-events: none;
+  }
+  .auth-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 1.5px;
+    background: linear-gradient(90deg, transparent, #7c5cff, #22d3ee, transparent);
+    animation: authScan 3.5s linear infinite;
+  }
+  @keyframes authScan {
+    0%   { left: -100%; }
+    100% { left: 100%; }
+  }
+  @keyframes authCardIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Logo */
+  .auth-logo {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    justify-content: center;
+    margin-bottom: 26px;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+  }
+  .auth-logo-mark {
+    width: 44px; height: 44px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #7c5cff, #4f8cff);
+    display: grid; place-items: center;
+    font-weight: 800; color: #fff; font-size: 18px;
+    box-shadow:
+      0 12px 28px rgba(124,92,255,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-logo-mark::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    animation: authShine 3s ease-in-out infinite;
+  }
+  @keyframes authShine {
+    0% { left: -100%; }
+    60%, 100% { left: 100%; }
+  }
+
+  .auth-logo-text span {
+    color: rgba(255,255,255,0.45);
+    font-weight: 500;
+  }
+
+  /* Title */
+  .auth-title {
+    position: relative;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    text-align: center;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #ffffff 0%, #a78bfa 60%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  .auth-sub {
+    position: relative;
+    color: rgba(255,255,255,0.45);
+    font-size: 13.5px;
+    text-align: center;
+    margin-bottom: 28px;
+    letter-spacing: 0.01em;
+  }
+
+  /* Field */
+  .field {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 8px;
+  }
+  .field-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .field-input input {
+    width: 100%;
+    padding: 14px 16px 14px 44px;
+    border-radius: 13px;
+    background: rgba(0,0,0,0.55);
+    border: 1.5px solid rgba(124,92,255,0.22);
+    color: #fff;
+    font-size: 14.5px;
+    font-family: inherit;
+    font-weight: 500;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+  .field-input input::placeholder {
+    color: rgba(255,255,255,0.28);
+    font-weight: 400;
+  }
+  .field-input input:focus {
+    border-color: rgba(124,92,255,0.7);
+    background: rgba(0,0,0,0.75);
+    box-shadow:
+      0 0 0 4px rgba(124,92,255,0.14),
+      0 0 24px -8px rgba(124,92,255,0.6);
+  }
+
+  .field-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px; height: 18px;
+    color: rgba(124,92,255,0.7);
+    pointer-events: none;
+    transition: color 0.2s ease;
+  }
+  .field-input:focus-within .field-icon {
+    color: #a78bfa;
+    filter: drop-shadow(0 0 8px rgba(167,139,250,0.7));
+  }
+
+  /* Show password toggle */
+  .field-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    display: grid; place-items: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+  }
+  .field-toggle:hover {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.85);
+  }
+  .field-toggle:active { transform: translateY(-50%) scale(0.92); }
+  .field-toggle svg { width: 16px; height: 16px; }
+
+  /* Password field butuh padding kanan */
+  .field-input.has-toggle input { padding-right: 48px; }
+
+  /* Button */
+  .btn-auth {
+    position: relative;
+    width: 100%;
+    padding: 15px 20px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #7c5cff, #4f8cff);
+    color: #fff;
+    font-size: 14.5px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    margin-top: 8px;
+    box-shadow:
+      0 0 0 1px rgba(124,92,255,0.4),
+      0 12px 30px -8px rgba(124,92,255,0.9),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    will-change: transform;
+  }
+  .btn-auth::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: authShine 3.2s ease-in-out infinite;
+  }
+  .btn-auth:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow:
+      0 0 0 1px rgba(124,92,255,0.6),
+      0 16px 36px -8px rgba(124,92,255,1),
+      inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+  .btn-auth:active:not(:disabled) {
+    transform: translateY(1px) scale(0.99);
+  }
+  .btn-auth:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+  .btn-auth:disabled::before { display: none; }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    border: 2px solid rgba(255,255,255,0.28);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Error box */
+  .auth-error {
+    display: none;
+    margin-top: 16px;
+    padding: 12px 15px;
+    border-radius: 12px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.32);
+    color: #f87171;
+    font-size: 13px;
+    text-align: center;
+    font-weight: 500;
+    line-height: 1.55;
+    animation: errIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .auth-error.show { display: block; }
+  .auth-error strong { color: #fca5a5; font-weight: 800; }
+
+  /* Variant untuk pesan "kicked" */
+  .auth-error.warn {
+    background: rgba(245,158,11,0.08);
+    border-color: rgba(245,158,11,0.35);
+    color: #fbbf24;
+  }
+  .auth-error.warn strong { color: #fcd34d; }
+
+  .auth-error.info {
+    background: rgba(34,211,238,0.08);
+    border-color: rgba(34,211,238,0.32);
+    color: #67e8f9;
+  }
+
+  @keyframes errIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Shake animation */
+  .field-input.shake {
+    animation: fieldShake 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .field-input.shake input {
+    border-color: rgba(239,68,68,0.65);
+    box-shadow: 0 0 0 4px rgba(239,68,68,0.14);
+  }
+  @keyframes fieldShake {
+    0%, 100% { transform: translateX(0); }
+    20%      { transform: translateX(-6px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(4px); }
+  }
+
+  /* Footer kecil */
+  .auth-foot {
+    position: relative;
+    text-align: center;
+    margin-top: 24px;
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.28);
+    letter-spacing: 0.04em;
+  }
+
+  /* Responsive */
+  @media (max-width: 420px) {
+    .auth-wrap { padding: 24px 16px; }
+    .auth-card { padding: 30px 22px 26px; border-radius: 18px; }
+    .auth-title { font-size: 22px; }
+    .auth-sub { font-size: 12.5px; margin-bottom: 24px; }
+    .auth-logo { margin-bottom: 22px; font-size: 16px; }
+    .auth-logo-mark { width: 40px; height: 40px; font-size: 17px; }
+    .field-input input { padding: 13px 14px 13px 42px; font-size: 14px; }
+    .btn-auth { padding: 14px 18px; font-size: 14px; }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+
+<body class="auth-body">
+
+  <div class="auth-decor" aria-hidden="true">
+    <div class="auth-blob b1"></div>
+    <div class="auth-blob b2"></div>
+  </div>
+
+  <div class="auth-wrap">
+    <div class="auth-card">
+
+      <div class="auth-logo">
+        <div class="auth-logo-mark">R</div>
+        <div class="auth-logo-text">Ruby<span>Engine</span></div>
+      </div>
+
+      <h1 class="auth-title">Selamat Datang</h1>
+      <p class="auth-sub">Masuk untuk melanjutkan ke RubyEngine</p>
+
+      <form id="loginForm" autocomplete="off">
+
+        <div class="field">
+          <label for="user">Username</label>
+          <div class="field-input" id="userWrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <input id="user" type="text" placeholder="Masukkan username" autocomplete="username" spellcheck="false" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="pass">Password</label>
+          <div class="field-input has-toggle" id="passWrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password" />
+            <button type="button" class="field-toggle" id="togglePass" aria-label="Tampilkan password">
+              <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-auth" id="loginBtn">
+          <span id="btnText">Masuk</span>
+        </button>
+
+        <div class="auth-error" id="errBox">Username atau password salah.</div>
+      </form>
+
+      <div class="auth-foot">© 2026 RubyEngine</div>
+
+    </div>
+  </div>
+  
+    <!-- ============================================================
+       FIREBASE SDK v8 (UMD)
+  ============================================================ -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- Firebase init (config) -->
+  <script src="js/firebase.js"></script>
+
+  <!-- Audio SFX -->
+  <script src="js/sfx.js"></script>
+
+  <!-- Auth module (Firebase version) -->
+  <script src="js/auth.js"></script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var form      = document.getElementById('loginForm');
+    var errBox    = document.getElementById('errBox');
+    var loginBtn  = document.getElementById('loginBtn');
+    var btnText   = document.getElementById('btnText');
+    var userInput = document.getElementById('user');
+    var passInput = document.getElementById('pass');
+    var userWrap  = document.getElementById('userWrap');
+    var passWrap  = document.getElementById('passWrap');
+    var toggleBtn = document.getElementById('togglePass');
+    var eyeIcon   = document.getElementById('eyeIcon');
+
+    var isLoading = false;
+
+    /* ============================================================
+       SFX helpers
+    ============================================================ */
+    function sfx(n) { if (window.SFX && SFX[n]) try { SFX[n](); } catch (e) {} }
+    function vib(p) { if (navigator.vibrate) try { navigator.vibrate(p); } catch (e) {} }
+
+    /* ============================================================
+       PESAN KICKED (dari auth-guard.js)
+    ============================================================ */
+    (function showKickMessage() {
+      try {
+        var msg = sessionStorage.getItem('re_kick_msg');
+        if (!msg) return;
+        sessionStorage.removeItem('re_kick_msg');
+        errBox.innerHTML = msg;
+        errBox.className = 'auth-error show warn';
+        // Auto scroll ke pesan
+        setTimeout(function () {
+          try { errBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+        }, 300);
+      } catch (e) {}
+    })();
+
+    /* ============================================================
+       REDIRECT kalau sudah login
+    ============================================================ */
+    if (Auth.current()) {
+      window.location.replace('home.html');
+      return;
+    }
+
+    /* ============================================================
+       LOADING STATE
+    ============================================================ */
+    function setLoading(loading) {
+      isLoading = loading;
+      loginBtn.disabled = loading;
+      if (loading) {
+        btnText.innerHTML = '<span class="spinner"></span>Memeriksa…';
+      } else {
+        btnText.textContent = 'Masuk';
+      }
+    }
+
+    /* ============================================================
+       SHOW ERROR
+    ============================================================ */
+    function showError(html, type) {
+      errBox.innerHTML = html;
+      errBox.className = 'auth-error show' + (type ? ' ' + type : '');
+      vib(120);
+      sfx('err');
+    }
+
+    function hideError() {
+      errBox.classList.remove('show');
+    }
+
+    /* ============================================================
+       SHAKE FIELD
+    ============================================================ */
+    function shakeField(wrap) {
+      wrap.classList.remove('shake');
+      void wrap.offsetWidth;
+      wrap.classList.add('shake');
+      setTimeout(function () { wrap.classList.remove('shake'); }, 450);
+    }
+
+    /* ============================================================
+       TOGGLE PASSWORD VISIBILITY
+    ============================================================ */
+    toggleBtn.addEventListener('click', function () {
+      var visible = passInput.type === 'text';
+      passInput.type = visible ? 'password' : 'text';
+
+      // Ganti icon
+      eyeIcon.innerHTML = visible
+        ? '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>'
+        : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="m1 1 22 22"/>';
+
+      toggleBtn.setAttribute('aria-label', visible ? 'Tampilkan password' : 'Sembunyikan password');
+      toggleBtn.style.color = visible ? 'rgba(255,255,255,0.4)' : '#a78bfa';
+
+      sfx('tap');
+      passInput.focus();
+    });
+
+    /* ============================================================
+       FIREBASE READY CHECK
+    ============================================================ */
+    if (!window.firebaseReady) {
+      // Cek lagi setelah delay
+      setTimeout(function () {
+        if (!window.firebaseReady) {
+          showError('Koneksi ke server gagal.<br>Coba refresh halaman.', '');
+        }
+      }, 2500);
+    }
+
+    /* ============================================================
+       SUBMIT
+    ============================================================ */
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (isLoading) return;
+
+      var u = userInput.value.trim();
+      var p = passInput.value.trim();
+
+      hideError();
+
+      if (!u) {
+        shakeField(userWrap);
+        showError('Username wajib diisi.');
+        userInput.focus();
+        return;
+      }
+      if (!p) {
+        shakeField(passWrap);
+        showError('Password wajib diisi.');
+        passInput.focus();
+        return;
+      }
+      if (u.length < 3) {
+        shakeField(userWrap);
+        showError('Username minimal 3 karakter.');
+        userInput.focus();
+        return;
+      }
+      if (!window.firebaseReady) {
+        showError('Koneksi ke server gagal.<br>Coba refresh halaman.');
+        return;
+      }
+
+      setLoading(true);
+      sfx('shoot');
+
+      try {
+        var res = await Auth.login(u, p);
+
+        if (res.ok) {
+          sfx('win');
+          vib([40, 30, 80]);
+          // Slight delay biar SFX sempat terdengar
+          setTimeout(function () {
+            window.location.replace('home.html');
+          }, 280);
+          return;
+        }
+
+        // Mapping error
+        var msg = 'Username atau password salah.';
+        var type = '';
+
+        if (res.reason === 'disabled') {
+          msg = '<strong>Akun dinonaktifkan</strong><br>Hubungi admin untuk informasi lebih lanjut.';
+          type = 'warn';
+        } else if (res.reason === 'not_found') {
+          msg = 'Akun tidak ditemukan.';
+        } else if (res.reason === 'wrong_password') {
+          msg = 'Password salah.';
+        } else if (res.reason === 'expired') {
+          msg = '<strong>Akun kamu sudah expired</strong><br>Hubungi admin untuk memperpanjang.';
+          type = 'warn';
+        } else if (res.reason === 'firebase_error') {
+          msg = 'Koneksi ke server gagal.<br>Coba lagi nanti.';
+          type = 'info';
+        }
+
+        showError(msg, type);
+        shakeField(passWrap);
+
+        // Clear password
+        passInput.value = '';
+        passInput.focus();
+
+      } catch (err) {
+        console.error('[Login] Error:', err);
+        showError('Terjadi kesalahan.<br>Coba lagi nanti.', 'info');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    /* ============================================================
+       HIDE ERROR saat user mengetik
+    ============================================================ */
+    [userInput, passInput].forEach(function (el) {
+      el.addEventListener('input', function () {
+        if (errBox.classList.contains('show') && !errBox.classList.contains('warn')) {
+          hideError();
+        }
+      }, { passive: true });
+    });
+
+    /* ============================================================
+       ENTER = submit, ESC = blur
+    ============================================================ */
+    userInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (this.value.trim()) passInput.focus();
+      }
+    });
+
+    /* ============================================================
+       AUTO-FOCUS
+    ============================================================ */
+    setTimeout(function () {
+      // Cuma focus di desktop (biar keyboard gak langsung muncul di mobile)
+      if (window.matchMedia('(pointer:fine)').matches) {
+        userInput.focus();
+      }
+    }, 500);
+
+  })();
+  </script>
+
+  <!-- ====== PWA: Register Service Worker ====== -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('[PWA] SW registered:', reg.scope))
+          .catch(err => console.warn('[PWA] SW failed:', err));
+      });
+    }
+  </script>
+
+</body>
+</html>

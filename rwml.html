@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>RW ML — RubyEngine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+
+<style>
+  @keyframes rePageIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  html.re-trans body { animation: rePageIn .4s cubic-bezier(.4,0,.2,1) both; }
+  html.re-leaving body { opacity:0 !important; transform:translateY(-4px) !important; transition:opacity .25s, transform .25s; }
+  #re-topbar{position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7c5cff,#22d3ee,#7c5cff);background-size:200% 100%;transform:scaleX(0);transform-origin:left;opacity:0;z-index:99999;pointer-events:none;box-shadow:0 0 14px rgba(124,92,255,.7);animation:reBarShift 2s linear infinite;transition:transform .25s,opacity .15s}
+  @keyframes reBarShift{to{background-position:200% 0}}
+  #re-topbar.show{opacity:1;transform:scaleX(1)}
+</style>
+<script>document.documentElement.classList.add('re-trans');</script>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#06050a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RubyEngine">
+<link rel="apple-touch-icon" href="image/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="image/icon-192.png">
+
+<style>
+  :root {
+    --bg:      #06050a;
+    --panel:   #0e0c18;
+    --panel-2: #14111f;
+    --line:    rgba(255,255,255,0.06);
+    --text:    #e8e5f5;
+    --text-2:  #8b82ab;
+    --text-3:  #4a4468;
+
+    --red:     #ff2b2b;
+    --red-2:   #ff5555;
+    --cyan:    #00e5ff;
+    --emerald: #22c55e;
+    --amber:   #fbbf24;
+    --violet:  #a855f7;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  /* =========================================================
+     ROOT LAYOUT — FIXED SCROLL BUG
+  ========================================================= */
+  html {
+    scroll-behavior: smooth;
+    background: var(--bg) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overscroll-behavior-y: none;
+  }
+
+  body.rw-body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    margin: 0 !important;
+    padding: 0 !important;
+    /* ↓ KUNCI FIX: pakai clip, bukan hidden */
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overscroll-behavior-y: none;
+    position: relative;
+    text-rendering: optimizeSpeed;
+  }
+
+  /* Grid pattern di body — pakai fixed, gak nambah tinggi dokumen */
+  body.rw-body::before {
+    content:'';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,43,43,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 80%);
+  }
+
+  /* =========================================================
+     DECOR — blob dibungkus dalam fixed container
+  ========================================================= */
+  .rw-decor {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .rw-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+    opacity: 0.55;
+    will-change: transform;
+  }
+  .rw-glow.g1 {
+    top: -15%; left: 50%;
+    transform: translateX(-50%);
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(255,43,43,0.35), transparent 70%);
+  }
+  .rw-glow.g2 {
+    bottom: -20%; right: -20%;
+    width: 420px; height: 420px;
+    background: radial-gradient(circle, rgba(0,229,255,0.20), transparent 70%);
+  }
+
+  .rw-shell {
+    position: relative;
+    z-index: 1;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 22px 18px 60px;
+  }
+
+  /* HERO */
+  .rw-hero {
+    position: relative;
+    border-radius: 16px;
+    padding: 20px 18px;
+    background: linear-gradient(180deg, rgba(255,43,43,0.06), rgba(0,0,0,0.4));
+    border: 1px solid rgba(255,43,43,0.30);
+    box-shadow: 0 0 22px -8px rgba(255,43,43,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .rw-hero::before {
+    content:'';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 1.5px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+    animation: rwScan 3s linear infinite;
+  }
+  @keyframes rwScan { to { left: 100%; } }
+
+  .rw-hero-top {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 10.5px;
+    color: var(--text-2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .rw-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 10px var(--red);
+    animation: rwPulse 1.4s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes rwPulse {
+    0%,100% { opacity:1; transform: scale(1); }
+    50% { opacity:.35; transform: scale(.7); }
+  }
+  .rw-hero-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #fff;
+    text-shadow: 0 0 12px rgba(255,43,43,0.7);
+    margin-bottom: 4px;
+  }
+  .rw-hero-sub {
+    font-size: 12px;
+    color: var(--text-2);
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .rw-hero-sub b { color: var(--red); font-weight: 700; }
+
+  /* CARD */
+  .rw-card {
+    position: relative;
+    border-radius: 16px;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1.5px solid rgba(255,43,43,0.30);
+    box-shadow: 0 0 24px -8px rgba(255,43,43,0.35), inset 0 1px 0 rgba(255,255,255,0.03);
+    padding: 22px 18px;
+    margin-bottom: 18px;
+  }
+
+  .rw-field { margin-bottom: 16px; }
+  .rw-field:last-of-type { margin-bottom: 18px; }
+  .rw-label {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 8px;
+  }
+  .rw-label::before {
+    content: '▶';
+    font-size: 9px;
+    opacity: 0.85;
+  }
+  .rw-input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 11px;
+    background: rgba(0,0,0,0.55);
+    border: 1.5px solid rgba(255,43,43,0.30);
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+    font-variant-numeric: tabular-nums;
+  }
+  .rw-input::placeholder { color: rgba(255,43,43,0.28); }
+  .rw-input:focus {
+    border-color: var(--red);
+    background: rgba(0,0,0,0.75);
+    box-shadow: 0 0 0 3px rgba(255,43,43,0.14), 0 0 18px -4px var(--red);
+  }
+  .rw-input:disabled { opacity: .55; cursor: not-allowed; }
+
+  .rw-btn {
+    width: 100%;
+    padding: 15px 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--red), var(--red-2));
+    color: #0a0404;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    box-shadow:
+      0 0 0 1px rgba(255,43,43,0.4),
+      0 10px 24px -8px rgba(255,43,43,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.35);
+    transition: transform .15s, box-shadow .2s, opacity .2s;
+    position: relative;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .rw-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    animation: rwShine 3s ease-in-out infinite;
+  }
+  @keyframes rwShine { 0%{left:-100%} 60%,100%{left:100%} }
+  .rw-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      0 0 0 1px rgba(255,43,43,0.6),
+      0 14px 30px -8px rgba(255,43,43,1),
+      inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+  .rw-btn:active:not(:disabled) { transform: translateY(1px); }
+  .rw-btn:disabled { opacity: .55; cursor: not-allowed; }
+  .rw-btn:disabled::before { display: none; }
+
+  .rw-loader { display: none; gap: 4px; }
+  .rw-loader.on { display: inline-flex; }
+  .rw-loader span {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: rwDot 1.2s ease-in-out infinite;
+  }
+  .rw-loader span:nth-child(2) { animation-delay: .15s; }
+  .rw-loader span:nth-child(3) { animation-delay: .3s; }
+  @keyframes rwDot {
+    0%,80%,100% { transform: scale(.5); opacity:.5; }
+    40% { transform: scale(1); opacity:1; }
+  }
+</style>
+  
+  <style>
+  /* TOOLS — selalu tampil, ada state locked/unlocked */
+  .rw-tools {
+    border-radius: 16px;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1.5px solid rgba(168,85,247,0.30);
+    box-shadow: 0 0 24px -8px rgba(168,85,247,0.35);
+    padding: 18px 16px;
+    margin-bottom: 18px;
+    transition: border-color .35s ease, box-shadow .35s ease;
+    animation: rwSlideIn .5s cubic-bezier(.22,1,.36,1) .15s both;
+  }
+  @keyframes rwSlideIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .rw-tools.locked {
+    border-color: rgba(168,85,247,0.16);
+    box-shadow: 0 0 24px -14px rgba(168,85,247,0.25);
+  }
+  .rw-tools.locked .rw-tool {
+    opacity: 0.55;
+  }
+  .rw-tools.locked .rw-tools-title {
+    color: var(--text-2);
+    text-shadow: none;
+  }
+  .rw-tools.locked .rw-tools-icon {
+    color: var(--text-2);
+    border-color: rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.04);
+  }
+
+  .rw-tools-head {
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 1px dashed rgba(168,85,247,0.28);
+  }
+  .rw-tools-icon {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: rgba(168,85,247,0.14);
+    border: 1px solid rgba(168,85,247,0.32);
+    display: grid; place-items: center;
+    color: var(--violet);
+    transition: color .35s ease, border-color .35s ease, background .35s ease;
+  }
+  .rw-tools-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--violet);
+    text-shadow: 0 0 10px rgba(168,85,247,0.6);
+    transition: color .35s ease, text-shadow .35s ease;
+  }
+
+  .rw-tool {
+    --tc: var(--cyan);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 14px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid color-mix(in srgb, var(--tc) 28%, transparent);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all .2s ease;
+    user-select: none;
+  }
+  .rw-tool:active { transform: scale(0.99); }
+  .rw-tool:hover {
+    border-color: color-mix(in srgb, var(--tc) 55%, transparent);
+    background: color-mix(in srgb, var(--tc) 4%, transparent);
+  }
+  .rw-tool.active {
+    border-color: var(--tc);
+    background: color-mix(in srgb, var(--tc) 10%, transparent);
+    box-shadow: 0 0 16px -4px var(--tc), inset 0 0 12px -6px var(--tc);
+    opacity: 1;
+  }
+  .rw-tools.locked .rw-tool.active {
+    opacity: 0.85;
+  }
+  .rw-tool[data-k="room"] { --tc: var(--emerald); }
+  .rw-tool[data-k="fast"] { --tc: var(--amber); }
+  .rw-tool[data-k="stab"] { --tc: var(--cyan); }
+
+  .rw-tool-left {
+    display: flex; align-items: center; gap: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+  .rw-tool-left .emoji {
+    font-size: 16px;
+    filter: drop-shadow(0 0 5px var(--tc));
+  }
+  .rw-tool.active .rw-tool-left .txt {
+    color: var(--tc);
+    font-weight: 700;
+    text-shadow: 0 0 8px color-mix(in srgb, var(--tc) 55%, transparent);
+  }
+
+  .rw-sw {
+    position: relative;
+    width: 48px; height: 26px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--tc) 8%, transparent);
+    border: 1.5px solid color-mix(in srgb, var(--tc) 32%, transparent);
+    transition: all .25s cubic-bezier(.4,0,.2,1);
+    flex-shrink: 0;
+  }
+  .rw-sw::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--tc) 55%, transparent);
+    transition: all .25s cubic-bezier(.4,0,.2,1);
+  }
+  .rw-tool.active .rw-sw {
+    background: color-mix(in srgb, var(--tc) 30%, transparent);
+    border-color: var(--tc);
+    box-shadow: 0 0 14px -4px var(--tc);
+  }
+  .rw-tool.active .rw-sw::after {
+    left: 24px;
+    background: var(--tc);
+    box-shadow: 0 0 10px var(--tc);
+  }
+
+  .rw-log {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: rgba(0,0,0,0.65);
+  border: 1px solid rgba(0,229,255,0.20);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11.5px;
+  color: var(--text-2);
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  min-height: 140px;
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,229,255,0.4) transparent;
+}
+
+/* Loading dots inline */
+.rw-log-line .dots {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.rw-log-line .dots span {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: rwLogDot 1.2s ease-in-out infinite;
+}
+.rw-log-line .dots span:nth-child(2) { animation-delay: .15s; }
+.rw-log-line .dots span:nth-child(3) { animation-delay: .3s; }
+@keyframes rwLogDot {
+  0%,80%,100% { opacity: .25; transform: scale(.8); }
+  40% { opacity: 1; transform: scale(1.2); }
+}
+  .rw-log.show { display: block; }
+  .rw-log::-webkit-scrollbar { width: 3px; }
+  .rw-log::-webkit-scrollbar-thumb {
+    background: rgba(0,229,255,0.35);
+    border-radius: 2px;
+  }
+  .rw-log-line {
+    display: flex;
+    gap: 6px;
+    animation: rwLineIn .2s ease;
+  }
+  .rw-log-line .pfx { color: var(--cyan); flex-shrink: 0; }
+  .rw-log-line.ok .pfx { color: var(--emerald); }
+  .rw-log-line.warn .pfx { color: var(--amber); }
+  .rw-log-line .ok { color: var(--emerald); font-weight: 700; }
+  .rw-log-line .warn { color: var(--amber); }
+  .rw-log-line .hi { color: #fff; font-weight: 700; }
+  .rw-log-line .vi { color: #c084fc; }
+  @keyframes rwLineIn {
+    from { opacity: 0; transform: translateX(-4px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .rw-status {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(0,229,255,0.04);
+    border: 1px dashed rgba(0,229,255,0.22);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    letter-spacing: 0.03em;
+    line-height: 1.5;
+    display: flex; align-items: center; gap: 8px;
+    transition: background .25s, border-color .25s;
+  }
+  .rw-status .ic {
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    color: var(--cyan);
+  }
+  .rw-status.ok { background: rgba(34,197,94,0.05); border-color: rgba(34,197,94,0.28); }
+  .rw-status.ok .ic { color: var(--emerald); }
+  .rw-status.err { background: rgba(255,43,43,0.05); border-color: rgba(255,43,43,0.28); }
+  .rw-status.err .ic { color: var(--red); }
+
+  /* MODAL */
+  .rw-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(3,2,6,0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .rw-modal.show { display: flex; animation: rwFadeIn .22s ease; }
+  @keyframes rwFadeIn { from{opacity:0} to{opacity:1} }
+
+  .rw-modal-card {
+    width: 100%;
+    max-width: 380px;
+    padding: 26px 22px 22px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, #16131f 0%, #0a0812 100%);
+    border: 1.5px solid var(--emerald);
+    box-shadow:
+      0 0 0 1px rgba(34,197,94,0.12),
+      0 0 50px -10px rgba(34,197,94,0.55),
+      0 30px 60px -20px rgba(0,0,0,0.9);
+    text-align: center;
+    animation: rwPopIn .38s cubic-bezier(.34,1.56,.64,1);
+    position: relative;
+  }
+  @keyframes rwPopIn {
+    from { opacity: 0; transform: scale(.92) translateY(20px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .rw-modal-card::before {
+    content: '';
+    position: absolute;
+    top: -30%; left: 50%;
+    transform: translateX(-50%);
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(34,197,94,0.16), transparent 65%);
+    pointer-events: none;
+  }
+
+  .rw-modal-check {
+    position: relative;
+    width: 66px; height: 66px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--emerald), #15803d);
+    display: grid; place-items: center;
+    box-shadow: 0 0 30px -6px rgba(34,197,94,0.8), inset 0 2px 0 rgba(255,255,255,0.35);
+  }
+  .rw-modal-check::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(34,197,94,0.4);
+    animation: rwRing 1.6s ease-out 2;
+  }
+  @keyframes rwRing {
+    0%   { transform: scale(.9); opacity: .9; }
+    100% { transform: scale(1.35); opacity: 0; }
+  }
+  .rw-modal-check svg {
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+    animation: rwCheckDraw .45s ease .2s forwards;
+  }
+  @keyframes rwCheckDraw { to { stroke-dashoffset: 0; } }
+
+  .rw-modal-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #fff;
+    margin-bottom: 4px;
+    text-shadow: 0 0 14px rgba(34,197,94,0.7);
+  }
+  .rw-modal-sub {
+    font-size: 12px;
+    color: var(--text-2);
+    letter-spacing: 0.05em;
+    margin-bottom: 18px;
+  }
+
+  .rw-modal-info {
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 18px;
+    text-align: left;
+  }
+  .rw-info-row {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+  .rw-info-row:first-child { padding-top: 0; }
+  .rw-info-row:last-child { padding-bottom: 0; border-bottom: none; }
+  .rw-info-row .k { color: var(--text-2); }
+  .rw-info-row .v {
+    color: #fff;
+    font-weight: 700;
+    text-align: right;
+    word-break: break-word;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 8px rgba(34,197,94,0.3);
+  }
+
+  .rw-modal-close {
+    width: 100%;
+    padding: 12px;
+    border-radius: 11px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .18s, border-color .18s;
+  }
+  .rw-modal-close:hover {
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(255,255,255,0.22);
+  }
+  .rw-modal-close:active { transform: scale(0.98); }
+
+  @media (max-width: 400px) {
+    .rw-shell { padding: 16px 14px 50px; }
+    .rw-card, .rw-tools { padding: 18px 14px; }
+    .rw-hero { padding: 16px 14px; }
+    .rw-hero-title { font-size: 18px; }
+    .rw-modal-card { padding: 22px 18px 18px; }
+    .rw-modal-check { width: 58px; height: 58px; }
+    .rw-modal-title { font-size: 18px; }
+  }
+</style>
+</head>
+
+<body class="rw-body">
+
+  <div class="rw-decor" aria-hidden="true">
+    <div class="rw-glow g1"></div>
+    <div class="rw-glow g2"></div>
+  </div>
+
+  <header class="re-header">
+    <div class="re-header-inner">
+      <a href="home.html" class="re-logo">
+        <div class="re-logo-mark">R</div>
+        <div class="re-logo-text">Ruby<span>Engine</span></div>
+      </a>
+      <div class="re-header-actions">
+        <button class="re-icon-btn" aria-label="Notifications">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <a href="login.html" class="re-icon-btn" aria-label="Account">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <nav class="re-nav">
+    <div class="re-nav-inner">
+      <a href="home.html">Home</a>
+      <a href="apk.html">APK</a>
+      <a href="game.html">Game</a>
+      <a href="wa.html">WA</a>
+      <a href="rwml.html" class="active">RW ML</a>
+      <a href="hpinfo.html">HP Info</a>
+      <a href="update.html">Update</a>
+    </div>
+  </nav>
+
+  <main class="rw-shell">
+
+    <!-- HERO -->
+    <section class="rw-hero">
+      <div class="rw-hero-top">
+        <span class="rw-dot"></span>
+        <span>Terminal · Ready</span>
+      </div>
+      <div class="rw-hero-title">RW ML v1.0 - beta</div>
+      <div class="rw-hero-sub">Status: <b id="heroStatus">Waiting input</b></div>
+    </section>
+
+    <!-- FORM CARD -->
+    <section class="rw-card">
+      <div class="rw-field">
+        <label class="rw-label" for="accId">ID Account</label>
+        <input id="accId" class="rw-input" type="tel" inputmode="numeric" placeholder="000000000" autocomplete="off" maxlength="15">
+      </div>
+      <div class="rw-field">
+        <label class="rw-label" for="srvId">ID Server</label>
+        <input id="srvId" class="rw-input" type="tel" inputmode="numeric" placeholder="0000" autocomplete="off" maxlength="8">
+      </div>
+
+      <button type="button" class="rw-btn" id="injectBtn">
+        <span id="injectText">▶ Inject</span>
+        <span class="rw-loader" id="injectLoader">
+          <span></span><span></span><span></span>
+        </span>
+      </button>
+    </section>
+
+    <!-- TOOLS PANEL — selalu tampil -->
+    <section class="rw-tools locked" id="toolsCard">
+      <div class="rw-tools-head">
+        <div class="rw-tools-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+        </div>
+        <div class="rw-tools-title">Pilih Tools</div>
+      </div>
+
+      <div class="rw-tool" data-k="room">
+        <div class="rw-tool-left">
+          <span class="emoji">🌿</span>
+          <span class="txt">Room Wangi</span>
+        </div>
+        <div class="rw-sw"></div>
+      </div>
+
+      <div class="rw-tool" data-k="fast">
+        <div class="rw-tool-left">
+          <span class="emoji">⚡</span>
+          <span class="txt">Fast Matching</span>
+        </div>
+        <div class="rw-sw"></div>
+      </div>
+
+      <div class="rw-tool" data-k="stab">
+        <div class="rw-tool-left">
+          <span class="emoji">📶</span>
+          <span class="txt">Stabilizer Ping</span>
+        </div>
+        <div class="rw-sw"></div>
+      </div>
+
+      <button type="button" class="rw-btn" id="activateBtn" style="margin-top: 14px;">
+        <span id="actText">⚡ Activate</span>
+        <span class="rw-loader" id="actLoader">
+          <span></span><span></span><span></span>
+        </span>
+      </button>
+
+      <div class="rw-log" id="log"></div>
+
+      <div class="rw-status" id="statusBar">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4"/>
+          <path d="M12 8h.01"/>
+        </svg>
+        <span id="statusText">Pilih tools dulu, lalu isi ID & Server di atas.</span>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- SUCCESS MODAL -->
+  <div class="rw-modal" id="modal">
+    <div class="rw-modal-card">
+
+      <div class="rw-modal-check">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#04140a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12l5 5L20 6"/>
+        </svg>
+      </div>
+
+      <div class="rw-modal-title">SUCCESS</div>
+      <div class="rw-modal-sub">Attack Request Sent</div>
+
+      <div class="rw-modal-info">
+        <div class="rw-info-row">
+          <span class="k">Version</span>
+          <span class="v">RW ML v1.0</span>
+        </div>
+        <div class="rw-info-row">
+          <span class="k">Target</span>
+          <span class="v" id="mTarget">—</span>
+        </div>
+        <div class="rw-info-row">
+          <span class="k">Tools</span>
+          <span class="v" id="mTools">—</span>
+        </div>
+        <div class="rw-info-row">
+          <span class="k">Time</span>
+          <span class="v" id="mTime">—</span>
+        </div>
+      </div>
+
+      <button type="button" class="rw-modal-close" id="modalClose">Tutup</button>
+
+    </div>
+  </div>
+
+  <script src="js/sfx.js"></script>
+  <script src="js/transition.js"></script>
+  
+    <script>
+  (function () {
+    'use strict';
+
+    var $ = function(id){ return document.getElementById(id) };
+    function sfx(n){ if(window.SFX && SFX[n]) try{SFX[n]()}catch(e){} }
+    function vib(p){ if(navigator.vibrate) try{navigator.vibrate(p)}catch(e){} }
+    function pad(n){ return n < 10 ? '0' + n : '' + n; }
+
+    var E = {
+      accId:       $('accId'),
+      srvId:       $('srvId'),
+      heroStatus:  $('heroStatus'),
+      injectBtn:   $('injectBtn'),
+      injectText:  $('injectText'),
+      injectLoader:$('injectLoader'),
+      toolsCard:   $('toolsCard'),
+      activateBtn: $('activateBtn'),
+      actText:     $('actText'),
+      actLoader:   $('actLoader'),
+      log:         $('log'),
+      statusBar:   $('statusBar'),
+      statusText:  $('statusText'),
+      modal:       $('modal'),
+      modalClose:  $('modalClose'),
+      mTarget:     $('mTarget'),
+      mTools:      $('mTools'),
+      mTime:       $('mTime')
+    };
+
+    var tools = { room: false, fast: false, stab: false };
+    var TOOL_NAMES = { room: 'Room Wangi', fast: 'Fast Matching', stab: 'Stabilizer Ping' };
+    var isInjected = false;
+    var isActivating = false;
+
+    /* DIGIT ONLY */
+    [E.accId, E.srvId].forEach(function(el){
+      el.addEventListener('input', function(){
+        var v = this.value.replace(/\D/g, '');
+        if(v !== this.value) this.value = v;
+      }, { passive: true });
+    });
+
+    /* HELPERS */
+    function scrollToBottom(smooth){
+      var top = document.documentElement.scrollHeight;
+      try { window.scrollTo({ top: top, behavior: smooth ? 'smooth' : 'auto' }); }
+      catch(e){ window.scrollTo(0, top); }
+    }
+
+    function scrollToEl(el){
+      if(!el) return;
+      try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      catch(e){ el.scrollIntoView(); }
+    }
+
+    function addLog(text, cls){
+      var line = document.createElement('div');
+      line.className = 'rw-log-line' + (cls ? ' ' + cls : '');
+      var pfx = cls === 'ok' ? '✓' : (cls === 'warn' ? '!' : '›');
+      line.innerHTML = '<span class="pfx">' + pfx + '</span><span>' + text + '</span>';
+      E.log.appendChild(line);
+      E.log.classList.add('show');
+      E.log.scrollTop = E.log.scrollHeight;
+      sfx('tick');
+    }
+
+    function clearLog(){
+      E.log.innerHTML = '';
+    }
+
+    function setStatus(text, state){
+      E.statusText.textContent = text;
+      E.statusBar.className = 'rw-status' + (state ? ' ' + state : '');
+    }
+
+    function updateStatusBar(){
+      var active = Object.keys(tools).filter(function(k){ return tools[k] });
+
+      if(!isInjected){
+        if(active.length){
+          setStatus('Tool terpilih. Isi ID & Server di atas, lalu tekan Inject.', '');
+        } else {
+          setStatus('Pilih tools dulu, lalu isi ID & Server di atas.', '');
+        }
+        return;
+      }
+
+      if(!active.length){
+        setStatus('Terhubung. Pilih minimal 1 tools, lalu tekan Activate.', 'ok');
+      } else {
+        var labels = active.map(function(k){ return TOOL_NAMES[k] }).join(' · ');
+        setStatus('Aktif: ' + labels, 'ok');
+      }
+    }
+
+    function shakeEl(el){
+      if(!el || !el.animate) return;
+      el.animate([
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-5px)' },
+        { transform: 'translateX(5px)' },
+        { transform: 'translateX(-3px)' },
+        { transform: 'translateX(3px)' },
+        { transform: 'translateX(0)' }
+      ], { duration: 300, easing: 'ease-out' });
+    }
+
+    /* TOGGLE TOOLS */
+    document.querySelectorAll('.rw-tool').forEach(function(el){
+      el.addEventListener('click', function(){
+        if(isActivating) return;
+        var k = el.dataset.k;
+        tools[k] = !tools[k];
+        el.classList.toggle('active', tools[k]);
+        sfx('tap'); vib(10);
+        updateStatusBar();
+      });
+    });
+
+    /* INJECT */
+    E.injectBtn.addEventListener('click', function(){
+      if(isInjected) return;
+
+      var acc = E.accId.value.trim();
+      var srv = E.srvId.value.trim();
+
+      if(!acc || acc.length < 5){
+        shakeEl(E.accId); E.accId.focus();
+        vib(80); sfx('err');
+        setStatus('ID Account minimal 5 digit.', 'err');
+        setTimeout(updateStatusBar, 1800);
+        return;
+      }
+      if(!srv || srv.length < 2){
+        shakeEl(E.srvId); E.srvId.focus();
+        vib(80); sfx('err');
+        setStatus('ID Server minimal 2 digit.', 'err');
+        setTimeout(updateStatusBar, 1800);
+        return;
+      }
+
+      E.injectBtn.disabled = true;
+      E.injectText.style.display = 'none';
+      E.injectLoader.classList.add('on');
+      E.heroStatus.textContent = 'Injecting...';
+      sfx('shoot');
+
+      setTimeout(function(){
+        isInjected = true;
+        E.toolsCard.classList.remove('locked');
+        E.injectLoader.classList.remove('on');
+        E.injectText.style.display = 'inline';
+        E.injectText.textContent = '✓ Injected';
+        E.accId.disabled = true;
+        E.srvId.disabled = true;
+        E.heroStatus.textContent = 'Connected';
+        updateStatusBar();
+
+        sfx('win'); vib([40, 30, 80]);
+
+        setTimeout(function(){ scrollToEl(E.toolsCard); }, 150);
+      }, 900);
+    });
+
+    /* ACTIVATE */
+    
+    E.activateBtn.addEventListener('click', function(){
+  if(isActivating) return;
+
+  if(!isInjected){
+    shakeEl(E.activateBtn);
+    setStatus('Isi ID & Server di atas, lalu tekan Inject dulu.', 'err');
+    setTimeout(updateStatusBar, 2200);
+    vib(80); sfx('err');
+    return;
+  }
+
+  var active = Object.keys(tools).filter(function(k){ return tools[k] });
+  if(!active.length){
+    shakeEl(E.activateBtn);
+    setStatus('Pilih minimal 1 tools dulu!', 'err');
+    setTimeout(updateStatusBar, 1800);
+    vib(80); sfx('err');
+    return;
+  }
+
+  isActivating = true;
+  E.activateBtn.disabled = true;
+  E.actText.style.display = 'none';
+  E.actLoader.classList.add('on');
+  E.heroStatus.textContent = 'Processing...';
+  clearLog();
+  E.log.classList.add('show');
+
+  var acc = E.accId.value.trim();
+  var srv = E.srvId.value.trim();
+  var toolNames = active.map(function(k){ return TOOL_NAMES[k] });
+  var toolLabel = toolNames.join(', ');
+
+  // ============================
+  // PART 1 — INIT & TARGET
+  // ============================
+  var steps = [
+    { html: 'Init <span class="hi">RW ML v1.0</span>...',                          cls: '',     d: 200 },
+    { html: 'Loading core modules <span class="dots"><span></span><span></span><span></span></span>', cls: '', d: 320 },
+    { html: 'Core modules <span class="ok">ready</span>',                           cls: 'ok',   d: 150 },
+    { html: 'Allocating memory buffer [64 MB]...',                                  cls: '',     d: 220 },
+    { html: 'Memory <span class="ok">allocated</span>',                             cls: 'ok',   d: 120 },
+
+    // Target
+    { html: 'Scanning target metadata...',                                          cls: '',     d: 280 },
+    { html: 'Target: <span class="hi">ID ' + acc + '</span> · Server <span class="hi">S' + srv + '</span>', cls: '', d: 300 },
+    { html: 'Resolving endpoint hostname...',                                       cls: '',     d: 260 },
+    { html: 'Endpoint <span class="ok">resolved</span>',                            cls: 'ok',   d: 140 },
+
+    // Connection
+    { html: 'Opening secure channel <span class="dots"><span></span><span></span><span></span></span>', cls: '', d: 340 },
+    { html: 'TLS handshake <span class="ok">OK</span> · cipher AES-256-GCM',        cls: 'ok',   d: 260 },
+    { html: 'Latency probe: <span class="hi">42ms</span> · jitter 3ms',             cls: '',     d: 200 },
+
+    // Auth
+    { html: 'Authenticating account...',                                            cls: '',     d: 380 },
+    { html: 'Verifying credentials...',                                             cls: '',     d: 320 },
+    { html: 'Account <span class="ok">verified</span>',                             cls: 'ok',   d: 180 },
+
+    // Bypass
+    { html: 'Bypassing firewall <span class="warn">probing gaps</span>...',         cls: 'warn', d: 380 },
+    { html: 'Firewall <span class="ok">bypassed</span>',                            cls: 'ok',   d: 180 },
+    { html: 'Bypassing anti-cheat layer <span class="dots"><span></span><span></span><span></span></span>', cls: 'warn', d: 420 },
+    { html: 'Anti-cheat <span class="ok">bypassed</span>',                          cls: 'ok',   d: 180 },
+    { html: 'Spoofing device fingerprint...',                                       cls: '',     d: 260 },
+    { html: 'Fingerprint <span class="ok">masked</span>',                           cls: 'ok',   d: 140 }
+  ];
+
+  // ============================
+  // PART 2 — PER-TOOL INJECTION
+  // ============================
+  var toolColor = { room: 'ok', fast: 'warn', stab: 'vi' };
+  active.forEach(function(k){
+    var name = TOOL_NAMES[k];
+    var colorCls = toolColor[k] || '';
+    steps.push({ html: 'Loading payload: <span class="' + colorCls + '">' + name + '</span>...', cls: '', d: 350 });
+    steps.push({ html: '&nbsp;&nbsp;↳ compiling <span class="dots"><span></span><span></span><span></span></span>', cls: '', d: 280 });
+    steps.push({ html: '&nbsp;&nbsp;↳ <span class="ok">injected</span>', cls: 'ok', d: 150 });
+  });
+
+  // ============================
+  // PART 3 — PATCH & STABILIZE
+  // ============================
+  steps.push({ html: 'Applying binary patches...',                                    cls: '',     d: 320 });
+  steps.push({ html: 'Patch <span class="ok">applied</span> · 12 offsets',            cls: 'ok',   d: 200 });
+  steps.push({ html: 'Restructuring packet headers...',                               cls: '',     d: 280 });
+  steps.push({ html: 'Headers <span class="ok">optimized</span>',                     cls: 'ok',   d: 160 });
+  steps.push({ html: 'Stabilizing connection...',                                     cls: '',     d: 320 });
+  steps.push({ html: 'Connection <span class="ok">stable</span> · 60 FPS lock',       cls: 'ok',   d: 180 });
+
+  // ============================
+  // PART 4 — SENDING PACKETS
+  // ============================
+  steps.push({ html: 'Crafting packets...',                                            cls: '',     d: 280 });
+  steps.push({ html: 'Packets crafted <span class="ok">OK</span> · 50/50 in queue',   cls: 'ok',   d: 220 });
+  steps.push({ html: 'Sending packets <span class="dots"><span></span><span></span><span></span></span>', cls: '', d: 340 });
+  steps.push({ html: '  [20%] <span class="hi">10/50</span> packets delivered',       cls: '',     d: 200 });
+  steps.push({ html: '  [50%] <span class="hi">25/50</span> packets delivered',       cls: '',     d: 220 });
+  steps.push({ html: '  [80%] <span class="hi">40/50</span> packets delivered',       cls: '',     d: 220 });
+  steps.push({ html: '  [100%] <span class="ok">50/50</span> packets delivered',      cls: 'ok',   d: 240 });
+
+  // ============================
+  // PART 5 — VERIFY & CLEANUP
+  // ============================
+  steps.push({ html: 'Verifying response...',                                          cls: '',     d: 300 });
+  steps.push({ html: 'Response <span class="ok">200 OK</span>',                        cls: 'ok',   d: 180 });
+  steps.push({ html: 'Cleaning traces <span class="dots"><span></span><span></span><span></span></span>', cls: '', d: 300 });
+  steps.push({ html: 'Cache flushed · logs wiped',                                     cls: 'ok',   d: 200 });
+  steps.push({ html: 'Issuing session token...',                                       cls: '',     d: 260 });
+  steps.push({ html: 'Token <span class="ok">issued</span> · expires in 24h',          cls: 'ok',   d: 200 });
+
+  // ============================
+  // PART 6 — SUCCESS
+  // ============================
+  steps.push({ html: '<span class="ok">Attack request sent successfully.</span>',      cls: 'ok',   d: 600 });
+
+  var total = 0;
+  steps.forEach(function(s, i){
+    total += s.d;
+    setTimeout(function(){
+      addLog(s.html, s.cls);
+      if(i > 0 && i % 4 === 0) scrollToBottom(true);
+    }, total);
+  });
+
+  setTimeout(function(){
+    isActivating = false;
+    E.activateBtn.disabled = false;
+    E.actText.style.display = 'inline';
+    E.actLoader.classList.remove('on');
+    E.heroStatus.textContent = 'Success';
+    setStatus('Attack berhasil dikirim ✓', 'ok');
+    openModal(acc, toolLabel);
+  }, total + 300);
+});
+    
+    /* MODAL */
+    function openModal(target, tools){
+      var now = new Date();
+      E.mTarget.textContent = target;
+      E.mTools.textContent = tools;
+      E.mTime.textContent =
+        pad(now.getDate()) + '/' + pad(now.getMonth()+1) + ' ' +
+        pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+
+      E.modal.classList.add('show');
+      sfx('win');
+      vib([40, 30, 60, 30, 100]);
+    }
+
+    function closeModal(){
+      E.modal.classList.remove('show');
+      sfx('tap'); vib(8);
+    }
+
+    E.modalClose.addEventListener('click', closeModal);
+    E.modal.addEventListener('click', function(e){
+      if(e.target === E.modal) closeModal();
+    });
+
+    /* INIT */
+    updateStatusBar();
+
+  })();
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('[PWA] SW registered:', reg.scope))
+          .catch(err => console.warn('[PWA] SW failed:', err));
+      });
+    }
+  </script>
+
+</body>
+</html>

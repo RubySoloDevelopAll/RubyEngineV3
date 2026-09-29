@@ -1,0 +1,63 @@
+{
+  "name": "RubyEngine — APK & Game in One App",
+  "short_name": "RubyEngine",
+  "description": "Platform kurasi aplikasi Android & game ringan. Cepat, aman, dan tanpa ribet.",
+  "start_url": "./home.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#05060a",
+  "theme_color": "#7c5cff",
+  "lang": "id",
+  "dir": "ltr",
+  "categories": ["utilities", "games", "productivity"],
+  "icons": [
+    {
+      "src": "image/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "image/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "image/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "image/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "APK",
+      "short_name": "APK",
+      "description": "Lihat katalog APK",
+      "url": "./apk.html",
+      "icons": [{ "src": "image/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Game",
+      "short_name": "Game",
+      "description": "Lihat katalog Game",
+      "url": "./game.html",
+      "icons": [{ "src": "image/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "WA Tools",
+      "short_name": "WA",
+      "description": "Buka WA Tools",
+      "url": "./wa.html",
+      "icons": [{ "src": "image/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

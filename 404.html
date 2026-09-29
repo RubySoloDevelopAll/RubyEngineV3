@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>404 — Halaman Tidak Ditemukan · RubyEngine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c5cff">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html, body {
+    width: 100%;
+    min-height: 100vh;
+    background: #05060a;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #fff;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* BG DECOR */
+  .bg-blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(110px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.9;
+  }
+  .bg-blob.b1 {
+    top: -20%; left: 50%;
+    transform: translateX(-50%);
+    width: 720px; height: 720px;
+    background: radial-gradient(circle, rgba(124,92,255,0.28), transparent 70%);
+  }
+  .bg-blob.b2 {
+    bottom: -25%; right: -15%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(239,68,68,0.18), transparent 70%);
+  }
+  .bg-blob.b3 {
+    bottom: -20%; left: -10%;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(59,110,255,0.20), transparent 70%);
+  }
+  .stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,0.45), transparent),
+      radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 85% 65%, rgba(255,255,255,0.35), transparent),
+      radial-gradient(1px 1px at 15% 60%, rgba(255,255,255,0.45), transparent),
+      radial-gradient(1px 1px at 55% 45%, rgba(255,255,255,0.3), transparent);
+  }
+
+  /* SHELL */
+  .err-shell {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
+  /* CARD */
+  .err-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 48px 34px 42px;
+    border-radius: 26px;
+    background: linear-gradient(180deg, rgba(18,22,34,0.85), rgba(10,12,20,0.92));
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow:
+      0 30px 80px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease;
+  }
+  .err-card::before {
+    content: '';
+    position: absolute;
+    top: -60%; left: 50%;
+    transform: translateX(-50%);
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(124,92,255,0.18), transparent 60%);
+    pointer-events: none;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* GLITCH ICON */
+  .err-icon-wrap {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 28px;
+    display: grid;
+    place-items: center;
+  }
+  .err-icon-circle {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c5cff, #ef4444);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    box-shadow:
+      0 20px 50px rgba(124,92,255,0.45),
+      inset 0 2px 0 rgba(255,255,255,0.28);
+    position: relative;
+    z-index: 2;
+    animation: floaty 3.2s ease-in-out infinite;
+  }
+  @keyframes floaty {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+  .err-icon-circle svg {
+    width: 48px;
+    height: 48px;
+    stroke: #fff;
+  }
+
+  /* Pulse ring */
+  .err-ring {
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    border: 2px solid rgba(124,92,255,0.4);
+    animation: ringPulse 2s ease-out infinite;
+    z-index: 1;
+  }
+  .err-ring:nth-child(2) {
+    animation-delay: 0.6s;
+  }
+  @keyframes ringPulse {
+    0%   { transform: scale(0.9); opacity: 0.9; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+
+  /* TEXT */
+  .err-code {
+    position: relative;
+    font-size: 72px;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    background: linear-gradient(135deg, #7c5cff, #ef4444, #22d3ee);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 6px;
+    animation: shine 4s linear infinite;
+  }
+  @keyframes shine {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  .err-title {
+    position: relative;
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  .err-desc {
+    position: relative;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.55);
+    max-width: 340px;
+    margin: 0 auto 32px;
+  }
+
+  /* ACTIONS */
+  .err-actions {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 22px;
+    border-radius: 14px;
+    font-size: 14.5px;
+    font-weight: 700;
+    font-family: inherit;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    transition: all 0.2s ease;
+    width: 100%;
+  }
+  .btn.primary {
+    background: linear-gradient(135deg, #4f6cff 0%, #2563eb 55%, #1d4ed8 100%);
+    color: #fff;
+    box-shadow:
+      0 14px 34px rgba(37,99,235,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 18px 44px rgba(37,99,235,0.65),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .btn.ghost {
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .btn.ghost:hover {
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(255,255,255,0.18);
+  }
+  .btn:active { transform: translateY(0); }
+  .btn svg { transition: transform 0.22s ease; }
+  .btn.primary:hover svg { transform: translateX(3px); }
+
+  /* QUICK LINKS */
+  .err-quick {
+    position: relative;
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .err-quick-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 14px;
+  }
+  .err-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .quick-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 6px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    text-decoration: none;
+    color: rgba(255,255,255,0.75);
+    font-size: 11px;
+    font-weight: 600;
+    transition: all 0.18s ease;
+  }
+  .quick-link:hover {
+    background: rgba(124,92,255,0.1);
+    border-color: rgba(124,92,255,0.35);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+  .quick-link-icon {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  /* FOOTER */
+  .err-footer {
+    margin-top: 32px;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.28);
+    text-align: center;
+  }
+
+  @media (max-width: 480px) {
+    .err-card { padding: 40px 24px 34px; border-radius: 22px; }
+    .err-code { font-size: 60px; }
+    .err-title { font-size: 19px; }
+    .err-icon-wrap { width: 100px; height: 100px; margin-bottom: 22px; }
+    .err-icon-circle { width: 82px; height: 82px; }
+    .err-icon-circle svg { width: 40px; height: 40px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="bg-blob b1"></div>
+  <div class="bg-blob b2"></div>
+  <div class="bg-blob b3"></div>
+  <div class="stars"></div>
+
+  <main class="err-shell">
+    <div class="err-card">
+
+      <div class="err-icon-wrap">
+        <div class="err-ring"></div>
+        <div class="err-ring"></div>
+        <div class="err-icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="err-code">404</div>
+      <h1 class="err-title">Halaman Tidak Ditemukan</h1>
+      <p class="err-desc">
+        Sepertinya halaman yang kamu cari tidak ada, sudah dipindah,
+        atau salah ketik URL.
+      </p>
+
+      <div class="err-actions">
+        <a href="home.html" class="btn primary">
+          Kembali ke Home
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </a>
+        <button type="button" class="btn ghost" onclick="history.length > 1 ? history.back() : location.href='home.html'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5"/>
+            <path d="m12 19-7-7 7-7"/>
+          </svg>
+          Halaman Sebelumnya
+        </button>
+      </div>
+
+      <div class="err-quick">
+        <div class="err-quick-label">Akses Cepat</div>
+        <div class="err-quick-grid">
+          <a href="apk.html" class="quick-link">
+            <span class="quick-link-icon">📱</span>
+            APK
+          </a>
+          <a href="game.html" class="quick-link">
+            <span class="quick-link-icon">🎮</span>
+            Game
+          </a>
+          <a href="wa.html" class="quick-link">
+            <span class="quick-link-icon">💬</span>
+            WA
+          </a>
+          <a href="login.html" class="quick-link">
+            <span class="quick-link-icon">🔑</span>
+            Login
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="err-footer">© 2025 RubyEngine — All rights reserved.</div>
+  </main>
+
+</body>
+</html>

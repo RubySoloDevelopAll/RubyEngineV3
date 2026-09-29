@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>WA Tools — RubyEngine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+
+<style>
+  @keyframes rePageIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  html.re-trans body { animation: rePageIn .4s cubic-bezier(.4,0,.2,1) both; }
+  html.re-leaving body { opacity:0 !important; transform:translateY(-4px) !important; transition:opacity .25s, transform .25s; }
+  #re-topbar{position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7c5cff,#22d3ee,#7c5cff);background-size:200% 100%;transform:scaleX(0);transform-origin:left;opacity:0;z-index:99999;pointer-events:none;box-shadow:0 0 14px rgba(124,92,255,.7);animation:reBarShift 2s linear infinite;transition:transform .25s,opacity .15s}
+  @keyframes reBarShift{to{background-position:200% 0}}
+  #re-topbar.show{opacity:1;transform:scaleX(1)}
+</style>
+<script>document.documentElement.classList.add('re-trans');</script>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00ff88">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RubyEngine">
+<link rel="apple-touch-icon" href="image/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="image/icon-192.png">
+
+<style>
+  :root{
+    --bg:#000000;
+    --panel:#050807;
+    --panel-2:#0a0f0d;
+    --line:rgba(0,255,136,0.14);
+    --line-2:rgba(0,255,136,0.28);
+    --green:#00ff88;
+    --green-2:#00cc66;
+    --green-dim:#0a5c38;
+    --red:#ff2b4a;
+    --amber:#ffb000;
+    --cyan:#00e5ff;
+    --text:#c8ffe0;
+    --text-2:#4a9a72;
+    --text-3:#2a5540;
+    --mono:'JetBrains Mono', 'Courier New', monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  html { scroll-behavior: smooth; }
+  body.wa-body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--mono);
+    min-height:100dvh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  body.wa-modal-open{
+    overflow:hidden;
+    touch-action:none;
+  }
+
+  /* MATRIX CANVAS */
+  #matrixBg{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    opacity:.22;
+    pointer-events:none;
+    will-change:contents;
+  }
+
+  /* SCANLINES */
+  body.wa-body::before{
+    content:'';
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    background:repeating-linear-gradient(
+      0deg,
+      rgba(0,255,136,0.03) 0px,
+      rgba(0,255,136,0.03) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    opacity:.6;
+  }
+  body.wa-body::after{
+    content:'';
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.65) 100%);
+  }
+
+  .wa-shell{
+    position:relative;
+    z-index:2;
+    max-width:640px;
+    margin:0 auto;
+    padding:20px 16px 60px;
+  }
+
+  /* STATUS CARD */
+  .wa-status{
+    position:relative;
+    padding:14px 16px;
+    margin-bottom:18px;
+    border:1px solid var(--line-2);
+    background:linear-gradient(180deg, rgba(0,255,136,0.05), rgba(0,0,0,0.6));
+    box-shadow:
+      0 0 24px rgba(0,255,136,0.15),
+      inset 0 0 32px rgba(0,255,136,0.04);
+    overflow:hidden;
+  }
+  .wa-status::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:2px;
+    background:linear-gradient(90deg, transparent, var(--green), transparent);
+    animation:waScan 2.4s linear infinite;
+  }
+  @keyframes waScan{
+    0%{transform:translateX(-100%)}
+    100%{transform:translateX(100%)}
+  }
+  .wa-status-top{
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:8px;
+    font-size:11px;
+    color:var(--text-2);
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .wa-dot{
+    width:8px;height:8px;
+    background:var(--green);
+    border-radius:50%;
+    box-shadow:0 0 10px var(--green);
+    animation:waPulse 1.4s ease-in-out infinite;
+    flex-shrink:0;
+  }
+  @keyframes waPulse{
+    0%,100%{opacity:1;transform:scale(1)}
+    50%{opacity:.4;transform:scale(.75)}
+  }
+  .wa-status-title{
+    font-size:14px;
+    font-weight:700;
+    color:var(--green);
+    letter-spacing:.06em;
+    text-shadow:0 0 8px rgba(0,255,136,.6);
+    margin-bottom:4px;
+  }
+  .wa-status-sub{
+    font-size:11px;
+    color:var(--text-2);
+    letter-spacing:.04em;
+  }
+  .wa-status-sub b{color:var(--green);font-weight:700}
+  .wa-cursor{
+    display:inline-block;
+    width:7px;height:12px;
+    background:var(--green);
+    margin-left:2px;
+    animation:waBlink 1s steps(2,start) infinite;
+    vertical-align:middle;
+    box-shadow:0 0 6px var(--green);
+  }
+  @keyframes waBlink{to{visibility:hidden}}
+
+  /* PANEL */
+  .wa-panel{
+  position:relative;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg, var(--panel-2), var(--panel));
+  padding:20px 18px;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.9),
+    inset 0 1px 0 rgba(0,255,136,.05);
+  overflow:visible;
+  z-index:1;
+}
+  .wa-panel::before{
+    content:'';
+    position:absolute;
+    top:-1px;left:-1px;right:-1px;
+    height:1px;
+    background:linear-gradient(90deg, transparent, var(--green), transparent);
+    opacity:.5;
+  }
+
+.wa-field{margin-bottom:20px;position:relative}
+.wa-field:has(.wa-select){z-index:100;overflow:visible}
+  .wa-field:last-of-type{margin-bottom:22px}
+
+  .wa-label{
+    display:flex;align-items:center;gap:6px;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--text-2);
+    margin-bottom:10px;
+  }
+  .wa-label::before{
+    content:'>';
+    color:var(--green);
+    font-weight:700;
+    text-shadow:0 0 6px var(--green);
+  }
+
+  .wa-input{
+    width:100%;
+    padding:14px 16px;
+    background:#000;
+    border:1px solid var(--line-2);
+    color:var(--green);
+    font-family:var(--mono);
+    font-size:15px;
+    font-weight:500;
+    letter-spacing:.04em;
+    outline:none;
+    transition:border-color .15s, box-shadow .15s, background .15s;
+    font-variant-numeric:tabular-nums;
+  }
+  .wa-input::placeholder{color:var(--text-3)}
+  .wa-input:focus{
+    border-color:var(--green);
+    box-shadow:
+      0 0 0 1px var(--green),
+      0 0 20px rgba(0,255,136,.25),
+      inset 0 0 12px rgba(0,255,136,.05);
+    background:#020705;
+  }
+  .wa-input.shake{
+    animation:waShake .35s cubic-bezier(.4,0,.2,1);
+    border-color:var(--red);
+    box-shadow:0 0 20px rgba(255,43,74,.4);
+  }
+  @keyframes waShake{
+    0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-6px)}
+    50%{transform:translateX(6px)}
+    75%{transform:translateX(-3px)}
+  }
+
+  /* SELECT */
+.wa-select{position:relative;user-select:none}
+.wa-select.open{z-index:9999}
+  .wa-select-trigger{
+    width:100%;
+    padding:14px 16px;
+    background:#000;
+    border:1px solid var(--line-2);
+    color:var(--green);
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;
+    text-align:left;
+    letter-spacing:.04em;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .wa-select-trigger:hover{border-color:var(--green)}
+  .wa-select.open .wa-select-trigger{
+    border-color:var(--green);
+    box-shadow:
+      0 0 0 1px var(--green),
+      0 0 20px rgba(0,255,136,.25),
+      inset 0 0 12px rgba(0,255,136,.05);
+  }
+  .wa-select-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wa-select-label.empty{color:var(--text-3)}
+  .wa-select-label .pkg-name{color:var(--green);font-weight:700}
+  .wa-select-label .pkg-sep{color:var(--text-3);margin:0 5px}
+  .wa-select-label .pkg-count{color:var(--cyan);font-weight:700}
+  .wa-select-arrow{
+    flex-shrink:0;
+    color:var(--green);
+    transition:transform .2s;
+    display:grid;place-items:center;
+  }
+  .wa-select.open .wa-select-arrow{transform:rotate(180deg)}
+
+  .wa-select-menu{
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0;right:0;
+    padding:6px;
+    background:#000;
+    border:1px solid var(--green);
+    box-shadow:0 0 30px rgba(0,255,136,.35);
+    opacity:0;
+    transform:translateY(-6px);
+    pointer-events:none;
+    transition:opacity .15s, transform .15s;
+    z-index:9999;
+  }
+  .wa-select.open .wa-select-menu{opacity:1;transform:translateY(0);pointer-events:auto}
+
+  .wa-option{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 12px;
+    cursor:pointer;
+    transition:background .12s, padding-left .12s;
+    border-left:2px solid transparent;
+    position:relative;
+  }
+  .wa-option:hover{
+    background:rgba(0,255,136,.06);
+    border-left-color:var(--green);
+    padding-left:14px;
+  }
+  .wa-option.selected{
+    background:rgba(0,255,136,.08);
+    border-left-color:var(--green);
+  }
+  .wa-option.disabled{
+    opacity:.35;
+    cursor:not-allowed;
+    filter:grayscale(1);
+  }
+  .wa-option.disabled:hover{background:transparent;border-left-color:transparent;padding-left:12px}
+  .wa-option-body{flex:1;min-width:0}
+  .wa-option-name{
+    font-size:13px;font-weight:700;
+    color:var(--text);
+    margin-bottom:2px;
+    letter-spacing:.02em;
+  }
+  .wa-option-meta{font-size:10.5px;color:var(--text-2);letter-spacing:.04em}
+  .wa-option-meta strong{color:var(--green);font-weight:700}
+  .wa-option-badge{
+    flex-shrink:0;
+    min-width:34px;
+    padding:4px 8px;
+    background:rgba(0,255,136,.1);
+    border:1px solid var(--green);
+    color:var(--green);
+    font-size:11.5px;
+    font-weight:700;
+    text-align:center;
+    font-variant-numeric:tabular-nums;
+    box-shadow:0 0 10px rgba(0,255,136,.2);
+  }
+  .wa-option-badge.warn{
+    background:rgba(255,176,0,.1);
+    border-color:var(--amber);
+    color:var(--amber);
+    box-shadow:0 0 10px rgba(255,176,0,.2);
+  }
+  .wa-option-badge.danger{
+    background:rgba(255,43,74,.1);
+    border-color:var(--red);
+    color:var(--red);
+    box-shadow:0 0 10px rgba(255,43,74,.2);
+  }
+  .wa-option-badge.zero{
+    background:transparent;
+    border-color:var(--text-3);
+    color:var(--text-3);
+    box-shadow:none;
+  }
+
+  /* REFILL */
+  .wa-refill{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 14px;
+    margin-bottom:16px;
+    border:1px dashed var(--line-2);
+    background:rgba(0,255,136,.03);
+    font-size:11px;
+    letter-spacing:.04em;
+  }
+  .wa-refill-text{flex:1;color:var(--text-2)}
+  .wa-refill-text b{color:var(--green);font-weight:700;font-variant-numeric:tabular-nums}
+  .wa-refill-badge{
+    padding:3px 9px;
+    border:1px solid var(--line-2);
+    color:var(--text-3);
+    font-size:9.5px;
+    font-weight:700;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+  }
+  .wa-refill-badge.full{
+    border-color:var(--green);
+    color:var(--green);
+    background:rgba(0,255,136,.08);
+    box-shadow:0 0 12px rgba(0,255,136,.3);
+  }
+
+  /* SUBMIT */
+  .wa-submit{
+    position:relative;
+    width:100%;
+    padding:16px 20px;
+    background:linear-gradient(180deg, #00ff88, #00b35c);
+    color:#000;
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    border:none;
+    cursor:pointer;
+    overflow:hidden;
+    transition:transform .12s, box-shadow .15s;
+    box-shadow:
+      0 0 24px rgba(0,255,136,.4),
+      inset 0 -2px 0 rgba(0,0,0,.25),
+      inset 0 2px 0 rgba(255,255,255,.25);
+  }
+  .wa-submit::before{
+    content:'';
+    position:absolute;
+    top:0;left:-100%;
+    width:100%;height:100%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+    transition:left .5s;
+  }
+  .wa-submit:hover:not(:disabled)::before{left:100%}
+  .wa-submit:hover:not(:disabled){
+    transform:translateY(-1px);
+    box-shadow:
+      0 0 36px rgba(0,255,136,.7),
+      inset 0 -2px 0 rgba(0,0,0,.25),
+      inset 0 2px 0 rgba(255,255,255,.25);
+  }
+  .wa-submit:active:not(:disabled){transform:translateY(1px)}
+  .wa-submit:disabled{
+    background:linear-gradient(180deg, #143324, #0a1f14);
+    color:var(--text-3);
+    cursor:not-allowed;
+    box-shadow:inset 0 0 0 1px var(--line);
+    text-shadow:none;
+  }
+  .wa-submit.loading{
+    background:linear-gradient(180deg, #143324, #0a1f14);
+    color:var(--green);
+    cursor:wait;
+    box-shadow:inset 0 0 0 1px var(--line-2), 0 0 20px rgba(0,255,136,.15);
+    animation:waPulse 1s ease-in-out infinite;
+  }
+
+  /* NOTE */
+  .wa-note{
+    display:flex;align-items:center;justify-content:center;
+    gap:6px;
+    margin-top:14px;
+    font-size:10.5px;
+    color:var(--text-3);
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  .wa-note::before{content:'[';color:var(--green);font-weight:700}
+  .wa-note::after{content:']';color:var(--green);font-weight:700}
+  
+  /* ============ HACKER MODAL ============ */
+  .wa-modal{
+    position:fixed;
+    inset:0;
+    z-index:300;
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    padding:0;
+    padding-top:40px;
+    background:rgba(0,0,0,0.92);
+    backdrop-filter:blur(6px);
+  }
+  .wa-modal.show{display:flex;animation:waFadeIn .2s ease}
+
+  @keyframes waFadeIn{from{opacity:0}to{opacity:1}}
+
+  .wa-term{
+    width:100%;
+    max-width:520px;
+    max-height:90dvh;
+    background:#000;
+    border:1px solid var(--green);
+    border-radius:20px 20px 0 0;
+    box-shadow:
+      0 0 60px rgba(0,255,136,.5),
+      inset 0 0 40px rgba(0,255,136,.03);
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    animation:waTermSlideUp .45s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes waTermSlideUp{
+    from{opacity:0;transform:translateY(80px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  .wa-term::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:2px;
+    background:linear-gradient(90deg, transparent, var(--green), transparent);
+    animation:waScan 1.8s linear infinite;
+    z-index:3;
+  }
+  .wa-term::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:repeating-linear-gradient(
+      0deg,
+      rgba(0,255,136,.04) 0px,
+      rgba(0,255,136,.04) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    opacity:.5;
+    z-index:1;
+  }
+
+  /* TERMINAL BAR */
+  .wa-term-bar{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:8px 12px;
+    background:#0a0f0d;
+    border-bottom:1px solid var(--line);
+    font-size:11px;
+    color:var(--text-2);
+    letter-spacing:.06em;
+    position:relative;
+    z-index:2;
+    flex-shrink:0;
+  }
+  .wa-term-bar .dots{
+    display:flex;gap:5px;margin-right:6px;
+  }
+  .wa-term-bar .dots span{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--red);
+    box-shadow:0 0 6px currentColor;
+  }
+  .wa-term-bar .dots span:nth-child(2){background:var(--amber)}
+  .wa-term-bar .dots span:nth-child(3){background:var(--green)}
+  .wa-term-bar .title{
+    flex:1;
+    text-align:center;
+    color:var(--green);
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    font-size:10px;
+  }
+  .wa-term-bar .badge{
+    color:var(--red);
+    font-weight:700;
+    font-size:10px;
+    animation:waBlink 1.2s steps(2,start) infinite;
+  }
+
+  /* TERMINAL BODY */
+  .wa-term-body{
+    padding:14px 16px;
+    flex:1;
+    min-height:220px;
+    overflow-y:auto;
+    font-size:12px;
+    line-height:1.7;
+    position:relative;
+    z-index:2;
+    scroll-behavior:smooth;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+    scrollbar-color:var(--green) transparent;
+  }
+  .wa-term-body::-webkit-scrollbar{width:4px}
+  .wa-term-body::-webkit-scrollbar-track{background:transparent}
+  .wa-term-body::-webkit-scrollbar-thumb{background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  .wa-log-line{
+    display:flex;
+    gap:8px;
+    margin-bottom:2px;
+    animation:waLineIn .18s ease both;
+  }
+  @keyframes waLineIn{
+    from{opacity:0;transform:translateY(-3px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  .wa-log-line:last-child .wa-log-text{
+    animation:waTextPulse .6s ease;
+  }
+  @keyframes waTextPulse{
+    0%{text-shadow:0 0 12px currentColor}
+    100%{text-shadow:none}
+  }
+  .wa-log-prefix{
+    flex-shrink:0;
+    font-weight:700;
+    letter-spacing:.02em;
+    min-width:32px;
+  }
+  .wa-log-prefix.ok{color:var(--green);text-shadow:0 0 6px var(--green)}
+  .wa-log-prefix.info{color:var(--cyan)}
+  .wa-log-prefix.warn{color:var(--amber)}
+  .wa-log-prefix.err{color:var(--red)}
+  .wa-log-text{
+    flex:1;
+    color:var(--text);
+    letter-spacing:.01em;
+    word-break:break-word;
+  }
+  .wa-log-text.dim{color:var(--text-2)}
+  .wa-log-text.green{color:var(--green)}
+  .wa-log-text.cyan{color:var(--cyan)}
+  .wa-log-text.amber{color:var(--amber)}
+  .wa-log-text.red{color:var(--red)}
+
+  /* PROGRESS */
+  .wa-term-prog{
+    padding:0 16px 14px;
+    position:relative;
+    z-index:2;
+    flex-shrink:0;
+  }
+  .wa-term-prog-label{
+    display:flex;
+    justify-content:space-between;
+    font-size:10px;
+    color:var(--text-2);
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .wa-term-prog-label span:last-child{color:var(--green);font-weight:700;font-variant-numeric:tabular-nums}
+  .wa-term-prog-track{
+    height:6px;
+    background:#0a0f0d;
+    border:1px solid var(--line);
+    overflow:hidden;
+    position:relative;
+  }
+  .wa-term-prog-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--green-2), var(--green), var(--cyan));
+    box-shadow:0 0 12px var(--green);
+    transition:width .4s cubic-bezier(.4,0,.2,1);
+    position:relative;
+  }
+  .wa-term-prog-fill::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 6px,
+      rgba(0,0,0,.3) 6px,
+      rgba(0,0,0,.3) 8px
+    );
+    animation:waStripe .8s linear infinite;
+  }
+  @keyframes waStripe{
+    to{transform:translateX(14px)}
+  }
+
+  /* SUCCESS PANEL */
+  .wa-success{
+    display:none;
+    padding:22px 18px 18px;
+    text-align:center;
+    position:relative;
+    z-index:2;
+    border-top:1px solid var(--line);
+    background:radial-gradient(circle at 50% 0%, rgba(0,255,136,.12), transparent 70%);
+    flex-shrink:0;
+  }
+  .wa-success.show{display:block;animation:waLineIn .3s ease}
+  .wa-success-icon{
+    width:64px;height:64px;
+    margin:0 auto 12px;
+    border:2px solid var(--green);
+    border-radius:50%;
+    display:grid;place-items:center;
+    box-shadow:0 0 30px rgba(0,255,136,.5), inset 0 0 20px rgba(0,255,136,.15);
+    animation:waSuccessPop .4s cubic-bezier(.34,1.56,.64,1) both .1s;
+    position:relative;
+  }
+  .wa-success-icon::after{
+    content:'';
+    position:absolute;
+    inset:-8px;
+    border-radius:50%;
+    border:1px solid var(--green);
+    opacity:.3;
+    animation:waRipple 1.6s ease-out infinite;
+  }
+  @keyframes waRipple{
+    from{transform:scale(.8);opacity:.6}
+    to{transform:scale(1.4);opacity:0}
+  }
+  @keyframes waSuccessPop{
+    from{transform:scale(.5);opacity:0}
+    to{transform:scale(1);opacity:1}
+  }
+  .wa-success-icon svg{stroke:var(--green);filter:drop-shadow(0 0 8px var(--green))}
+  .wa-success-title{
+    font-size:16px;
+    font-weight:700;
+    color:var(--green);
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    text-shadow:0 0 14px rgba(0,255,136,.7);
+    margin-bottom:4px;
+  }
+  .wa-success-sub{
+    font-size:11px;
+    color:var(--text-2);
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    margin-bottom:16px;
+  }
+  .wa-success-info{
+    padding:12px 14px;
+    border:1px solid var(--line);
+    background:rgba(0,255,136,.02);
+    text-align:left;
+    font-size:11.5px;
+    margin-bottom:14px;
+  }
+  .wa-success-info-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:5px 0;
+    border-bottom:1px solid rgba(0,255,136,.06);
+  }
+  .wa-success-info-row:last-child{border-bottom:none;padding-bottom:0}
+  .wa-success-info-row:first-child{padding-top:0}
+  .wa-success-info-label{color:var(--text-2);letter-spacing:.06em;text-transform:uppercase;font-size:10px}
+  .wa-success-info-value{color:var(--green);font-weight:700;text-align:right;word-break:break-word;font-variant-numeric:tabular-nums}
+
+  .wa-term-close{
+    width:100%;
+    padding:12px;
+    background:transparent;
+    border:1px solid var(--line-2);
+    color:var(--green);
+    font-family:var(--mono);
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:background .15s, box-shadow .15s;
+    position:relative;
+    z-index:1;
+  }
+  .wa-term-close:hover{
+    background:rgba(0,255,136,.08);
+    box-shadow:0 0 20px rgba(0,255,136,.3), inset 0 0 12px rgba(0,255,136,.05);
+  }
+
+  /* TOAST */
+  .wa-toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%) translateY(80px);
+    padding:10px 16px;
+    background:#000;
+    border:1px solid var(--green);
+    color:var(--green);
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    font-weight:700;
+    box-shadow:0 0 24px rgba(0,255,136,.4);
+    opacity:0;visibility:hidden;pointer-events:none;
+    z-index:9999;
+    max-width:88vw;
+    transition:transform .3s cubic-bezier(.22,1,.36,1), opacity .25s, visibility 0s .25s;
+  }
+  .wa-toast.show{
+    transform:translateX(-50%) translateY(0);
+    opacity:1;visibility:visible;
+    transition:transform .3s cubic-bezier(.22,1,.36,1), opacity .25s, visibility 0s 0s;
+  }
+  .wa-toast.warn{border-color:var(--amber);color:var(--amber);box-shadow:0 0 24px rgba(255,176,0,.4)}
+  .wa-toast.error{border-color:var(--red);color:var(--red);box-shadow:0 0 24px rgba(255,43,74,.4)}
+
+  /* RESPONSIVE */
+  @media (max-width:480px){
+    .wa-shell{padding:14px 12px 40px}
+    .wa-panel{padding:16px 14px}
+    .wa-input,.wa-select-trigger{padding:12px 14px;font-size:14px}
+    .wa-submit{padding:14px;font-size:13px;letter-spacing:.18em}
+    .wa-term{max-height:92dvh}
+    .wa-term-body{font-size:11px;padding:12px}
+    .wa-success-title{font-size:14px}
+  }
+</style>
+</head>
+
+<body class="wa-body">
+
+  <canvas id="matrixBg"></canvas>
+
+  <header class="re-header">
+    <div class="re-header-inner">
+      <a href="home.html" class="re-logo">
+        <div class="re-logo-mark">R</div>
+        <div class="re-logo-text">Ruby<span>Engine</span></div>
+      </a>
+      <div class="re-header-actions">
+        <button class="re-icon-btn" aria-label="Notifications">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <a href="login.html" class="re-icon-btn" aria-label="Account">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <nav class="re-nav">
+    <div class="re-nav-inner">
+      <a href="home.html">Home</a>
+      <a href="apk.html">APK</a>
+      <a href="game.html">Game</a>
+      <a href="wa.html" class="active">WA</a>
+      <a href="rwml.html">RW ML</a>
+      <a href="hpinfo.html">HP Info</a>
+      <a href="update.html">Update</a>
+    </div>
+  </nav>
+
+  <main class="wa-shell">
+
+    <div class="wa-status">
+      <div class="wa-status-top">
+        <span class="wa-dot"></span>
+        <span>TERMINAL ACTIVE · ENCRYPTED</span>
+      </div>
+      <div class="wa-status-title">BADAK WHATSAPP v1.0 - beta</div>
+      <div class="wa-status-sub">
+        root@whatsapp-number.sh <b id="statusCount">9</b> methods loaded<span class="wa-cursor"></span>
+      </div>
+    </div>
+
+    <form class="wa-panel" id="waForm" onsubmit="event.preventDefault();">
+
+      <div class="wa-refill">
+        <div class="wa-refill-text">RESET HARIAN — <b id="refillTime">--:--:--</b></div>
+        <span class="wa-refill-badge" id="refillBadge">AUTO</span>
+      </div>
+
+      <div class="wa-field">
+        <label class="wa-label" for="waTarget">Target Number</label>
+        <input id="waTarget" class="wa-input" type="tel" inputmode="numeric" placeholder="628xxxxxxxxxx" autocomplete="off" />
+      </div>
+
+      <div class="wa-field">
+        <label class="wa-label">Select Method</label>
+        <div class="wa-select" id="waSelect">
+          <button type="button" class="wa-select-trigger" id="waTrigger" aria-haspopup="listbox">
+            <span class="wa-select-label empty" id="waLabel">Pilih paket Badak…</span>
+            <span class="wa-select-arrow">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </button>
+          <div class="wa-select-menu" id="waMenu" role="listbox">
+            <div class="wa-option" data-key="badak50" role="option">
+              <div class="wa-option-body">
+                <div class="wa-option-name">Badak 50 chat</div>
+                <div class="wa-option-meta"><strong class="meta-count">5</strong> Method Available</div>
+              </div>
+              <div class="wa-option-badge">5</div>
+            </div>
+            <div class="wa-option" data-key="badak100" role="option">
+              <div class="wa-option-body">
+                <div class="wa-option-name">Badak 100 chat</div>
+                <div class="wa-option-meta"><strong class="meta-count">3</strong> Method Available</div>
+              </div>
+              <div class="wa-option-badge">3</div>
+            </div>
+            <div class="wa-option" data-key="badak200" role="option">
+              <div class="wa-option-body">
+                <div class="wa-option-name">Badak 200 chat</div>
+                <div class="wa-option-meta"><strong class="meta-count">1</strong> Method Available</div>
+              </div>
+              <div class="wa-option-badge">1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="wa-submit" id="waSubmit" disabled>
+        <span id="waSubmitText">▶ Execute Attack</span>
+      </button>
+
+      <div class="wa-note">Secure channel · AES-256</div>
+
+    </form>
+
+  </main>
+
+  <!-- HACKER MODAL -->
+  <div class="wa-modal" id="waModal">
+    <div class="wa-term">
+
+      <div class="wa-term-bar">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="title">badak_attack.sh</div>
+        <div class="badge" id="termBadge">● REC</div>
+      </div>
+
+      <div class="wa-term-body" id="termBody"></div>
+
+      <div class="wa-term-prog" id="termProg">
+        <div class="wa-term-prog-label">
+          <span>PROGRESS</span>
+          <span id="termPct">0%</span>
+        </div>
+        <div class="wa-term-prog-track">
+          <div class="wa-term-prog-fill" id="termFill"></div>
+        </div>
+      </div>
+
+      <div class="wa-success" id="waSuccess">
+        <div class="wa-success-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12l5 5L20 6"/>
+          </svg>
+        </div>
+        <div class="wa-success-title">ACCESS GRANTED</div>
+        <div class="wa-success-sub">Attack Successfully Sent</div>
+
+        <div class="wa-success-info">
+          <div class="wa-success-info-row">
+            <span class="wa-success-info-label">Method</span>
+            <span class="wa-success-info-value" id="sMethod">—</span>
+          </div>
+          <div class="wa-success-info-row">
+            <span class="wa-success-info-label">Target</span>
+            <span class="wa-success-info-value" id="sTarget">—</span>
+          </div>
+          <div class="wa-success-info-row">
+            <span class="wa-success-info-label">Timestamp</span>
+            <span class="wa-success-info-value" id="sDate">—</span>
+          </div>
+        </div>
+
+        <button type="button" class="wa-term-close" id="termClose">[ CLOSE SESSION ]</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="wa-toast" id="waToast">MESSAGE</div>
+
+  <script src="js/sfx.js"></script>
+  <script src="js/transition.js"></script>
+  
+  <script>
+(function(){
+'use strict';
+
+// ============================================================
+// UTILS
+// ============================================================
+var $ = function(id){ return document.getElementById(id) };
+function pad(n){ return n < 10 ? '0' + n : '' + n }
+function todayKey(){
+  var d = new Date();
+  return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+}
+function vib(p){ if(navigator.vibrate) try{navigator.vibrate(p)}catch(e){} }
+function sfx(n){ if(window.SFX && SFX[n]) try{SFX[n]()}catch(e){} }
+
+// ============================================================
+// TOAST
+// ============================================================
+var toastEl = $('waToast');
+var _toastT = null;
+function toast(msg, type){
+  if(_toastT) clearTimeout(_toastT);
+  toastEl.textContent = msg;
+  toastEl.className = 'wa-toast show' + (type ? ' ' + type : '');
+  _toastT = setTimeout(function(){
+    toastEl.classList.remove('show');
+    _toastT = null;
+  }, 2000);
+}
+
+// ============================================================
+// MATRIX RAIN
+// ============================================================
+(function matrix(){
+  var cv = $('matrixBg');
+  if(!cv) return;
+  var ctx = cv.getContext('2d', { alpha: true });
+  var W = 0, H = 0, cols = 0, drops = null;
+  var fontSize = 14;
+  var chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン<>/\\{}[]$#@!';
+  var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+
+  function resize(){
+    W = cv.width = Math.floor(window.innerWidth * dpr);
+    H = cv.height = Math.floor(window.innerHeight * dpr);
+    cv.style.width = window.innerWidth + 'px';
+    cv.style.height = window.innerHeight + 'px';
+    cols = Math.floor(W / (fontSize * dpr));
+    drops = new Array(cols);
+    for(var i = 0; i < cols; i++) drops[i] = Math.random() * -100;
+  }
+  window.addEventListener('resize', resize, { passive: true });
+  resize();
+
+  var last = 0;
+  var frameInterval = 55;
+  var running = true;
+
+  function loop(t){
+    if(!running){ requestAnimationFrame(loop); return; }
+    if(t - last > frameInterval){
+      last = t;
+      ctx.fillStyle = 'rgba(0,0,0,0.09)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.font = (fontSize * dpr) + 'px "JetBrains Mono", monospace';
+      ctx.textBaseline = 'top';
+      for(var i = 0; i < cols; i++){
+        var ch = chars[(Math.random() * chars.length) | 0];
+        var x = i * fontSize * dpr;
+        var y = drops[i] * fontSize * dpr;
+        ctx.fillStyle = Math.random() < 0.03 ? '#ffffff' : '#00ff88';
+        ctx.fillText(ch, x, y);
+        if(y > H && Math.random() > 0.975) drops[i] = 0;
+        drops[i] += 1;
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  document.addEventListener('visibilitychange', function(){
+    running = !document.hidden;
+  });
+})();
+
+// ============================================================
+// STATE
+// ============================================================
+var KEY = 're_wa_hacker_v4';
+var PKGS = {
+  badak50:  { max: 5, name: 'Badak 50 Chat' },
+  badak100: { max: 3, name: 'Badak 100 Chat' },
+  badak200: { max: 1, name: 'Badak 200 Chat' }
+};
+
+function loadState(){
+  var today = todayKey();
+  var fb = { badak50:5, badak100:3, badak200:1, lastReset: today };
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(!raw) return fb;
+    var p = JSON.parse(raw);
+    var out = {
+      badak50:  (typeof p.badak50  === 'number' && p.badak50  >= 0 && p.badak50  <= 5) ? p.badak50  : 5,
+      badak100: (typeof p.badak100 === 'number' && p.badak100 >= 0 && p.badak100 <= 3) ? p.badak100 : 3,
+      badak200: (typeof p.badak200 === 'number' && p.badak200 >= 0 && p.badak200 <= 1) ? p.badak200 : 1,
+      lastReset: p.lastReset || today
+    };
+    if(out.lastReset !== today){
+      out.badak50 = 5; out.badak100 = 3; out.badak200 = 1;
+      out.lastReset = today;
+      try{ localStorage.setItem(KEY, JSON.stringify(out)); }catch(_){}
+    }
+    return out;
+  }catch(_){ return fb; }
+}
+var state = loadState();
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(_){} }
+
+// ============================================================
+// DOM CACHE
+// ============================================================
+var E = {
+  form:     $('waForm'),
+  target:   $('waTarget'),
+  submit:   $('waSubmit'),
+  submitTxt:$('waSubmitText'),
+  status:   $('statusCount'),
+  select:   $('waSelect'),
+  trigger:  $('waTrigger'),
+  label:    $('waLabel'),
+  menu:     $('waMenu'),
+  options:  null,
+  refillT:  $('refillTime'),
+  refillB:  $('refillBadge'),
+  modal:    $('waModal'),
+  termBody: $('termBody'),
+  termProg: $('termProg'),
+  termPct:  $('termPct'),
+  termFill: $('termFill'),
+  termBadge:$('termBadge'),
+  success:  $('waSuccess'),
+  sMethod:  $('sMethod'),
+  sTarget:  $('sTarget'),
+  sDate:    $('sDate'),
+  termClose:$('termClose')
+};
+E.options = E.menu.querySelectorAll('.wa-option');
+var selected = null;
+var openedAt = 0;
+
+// ============================================================
+// RENDER
+// ============================================================
+function badgeClass(left, max){
+  if(left <= 0) return 'zero';
+  var pct = (left / max) * 100;
+  if(pct <= 20) return 'danger';
+  if(pct <= 50) return 'warn';
+  return '';
+}
+
+function render(){
+  var total = 0;
+  for(var i = 0; i < E.options.length; i++){
+    var opt = E.options[i];
+    var key = opt.dataset.key;
+    var left = state[key];
+    var max = PKGS[key].max;
+    total += left;
+
+    opt.querySelector('.meta-count').textContent = left;
+    var b = opt.querySelector('.wa-option-badge');
+    b.textContent = left;
+    b.className = 'wa-option-badge ' + badgeClass(left, max);
+    opt.classList.toggle('disabled', left <= 0);
+    opt.classList.toggle('selected', selected === key);
+  }
+
+  if(selected && state[selected] !== undefined){
+    var pkg = PKGS[selected];
+    E.label.classList.remove('empty');
+    E.label.innerHTML = '<span class="pkg-name">' + pkg.name + '</span><span class="pkg-sep">·</span><span class="pkg-count">' + state[selected] + ' left</span>';
+  } else {
+    E.label.classList.add('empty');
+    E.label.textContent = 'Pilih paket Badak…';
+  }
+
+  E.status.textContent = total;
+  E.submit.disabled = !(selected && state[selected] > 0);
+}
+
+function updateRefill(){
+  var total = state.badak50 + state.badak100 + state.badak200;
+  var maxTotal = PKGS.badak50.max + PKGS.badak100.max + PKGS.badak200.max;
+
+  if(total >= maxTotal){
+    E.refillT.textContent = 'STOK PENUH';
+    E.refillB.textContent = 'FULL';
+    E.refillB.className = 'wa-refill-badge full';
+    return;
+  }
+
+  var now = new Date();
+  var next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+  var diff = next - now;
+  if(diff <= 0){
+    state.badak50 = 5; state.badak100 = 3; state.badak200 = 1;
+    state.lastReset = todayKey();
+    save();
+    render();
+    return;
+  }
+  var h = Math.floor(diff / 3600000);
+  var m = Math.floor((diff % 3600000) / 60000);
+  var s = Math.floor((diff % 60000) / 1000);
+  E.refillT.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+  E.refillB.textContent = 'AUTO';
+  E.refillB.className = 'wa-refill-badge';
+}
+  
+  // ============================================================
+// SELECT
+// ============================================================
+function openSel(){
+  if(E.select.classList.contains('open')) return;
+  // Kalau modal kebuka, tutup dulu biar gak tabrakan visual
+  if(E.modal.classList.contains('show')){
+    abortSequence();
+    E.modal.classList.remove('show');
+    document.body.classList.remove('wa-modal-open');
+  }
+  E.select.classList.add('open');
+  openedAt = Date.now();
+  sfx('tap'); vib(8);
+}
+function closeSel(){
+  E.select.classList.remove('open');
+}
+
+E.trigger.addEventListener('click', function(e){
+  e.preventDefault(); e.stopPropagation();
+  if(E.select.classList.contains('open')) closeSel();
+  else openSel();
+});
+
+E.menu.addEventListener('click', function(e){
+  e.stopPropagation();
+  if(Date.now() - openedAt < 120) return;
+  var opt = e.target.closest('.wa-option');
+  if(!opt) return;
+  var key = opt.dataset.key;
+  if(state[key] === undefined || state[key] <= 0){
+    sfx('err'); vib(60);
+    toast('Paket habis · pilih yang lain', 'warn');
+    return;
+  }
+  selected = key;
+  closeSel();
+  sfx('pick'); vib(10);
+  render();
+  toast(PKGS[key].name + ' · locked', 'success');
+});
+
+document.addEventListener('click', function(e){
+  if(!E.select.contains(e.target)) closeSel();
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeSel();
+});
+
+// ============================================================
+// INPUT
+// ============================================================
+E.target.addEventListener('input', function(){
+  var v = this.value.replace(/\D/g, '');
+  if(v.startsWith('0')) v = '62' + v.slice(1);
+  else if(v.startsWith('8')) v = '62' + v;
+  this.value = v;
+});
+
+// ============================================================
+// SCROLL HELPERS
+// ============================================================
+var scrollingElement = document.scrollingElement || document.documentElement;
+
+function scrollPageToBottom(){
+  var top = scrollingElement.scrollHeight;
+  try {
+    window.scrollTo({ top: top, behavior: 'smooth' });
+  } catch(e) {
+    window.scrollTo(0, top);
+  }
+}
+
+function scrollPageToTop(){
+  try {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch(e) {
+    window.scrollTo(0, 0);
+  }
+}
+
+function scrollTermToBottom(){
+  if(!E.termBody) return;
+  var top = E.termBody.scrollHeight - E.termBody.clientHeight;
+  try {
+    E.termBody.scrollTo({ top: top, behavior: 'smooth' });
+  } catch(e) {
+    E.termBody.scrollTop = top;
+  }
+}
+
+// ============================================================
+// HACKER SEQUENCE
+// ============================================================
+var ATTACK_SCRIPT = [
+  { t:'info', p:'[*]', d:' Initializing bypass protocol...',         wait: 380 },
+  { t:'info', p:'[*]', d:' Resolving target endpoint...',            wait: 320 },
+  { t:'ok',   p:'[✓]', d:' Endpoint resolved',                       wait: 220 },
+  { t:'info', p:'[*]', d:' Loading Badak engine v3.0...',            wait: 340 },
+  { t:'ok',   p:'[✓]', d:' Engine loaded · 9 modules ready',         wait: 260 },
+  { t:'warn', p:'[!]', d:' Firewall detected · probing gaps',        wait: 420 },
+  { t:'info', p:'[*]', d:' Crafting payload...',                     wait: 300 },
+  { t:'ok',   p:'[✓]', d:' Payload sealed · AES-256 encrypted',      wait: 240 },
+  { t:'info', p:'[*]', d:' Spoofing device fingerprint...',          wait: 340 },
+  { t:'ok',   p:'[✓]', d:' Fingerprint masked',                      wait: 200 },
+  { t:'info', p:'[*]', d:' Opening secure channel...',               wait: 320 },
+  { t:'ok',   p:'[✓]', d:' Channel open · tunnel established',       wait: 240 },
+  { t:'warn', p:'[!]', d:' Anti-spam bypass in progress...',         wait: 380 },
+  { t:'ok',   p:'[✓]', d:' Bypass complete',                         wait: 220 },
+  { t:'info', p:'[*]', d:' Injecting Badak packets...',              wait: 420 },
+  { t:'ok',   p:'[✓]', d:' 50/50 packets delivered',                 wait: 260 },
+  { t:'info', p:'[*]', d:' Flushing caches...',                      wait: 300 },
+  { t:'ok',   p:'[✓]', d:' Cache flushed · logs wiped',              wait: 220 },
+  { t:'info', p:'[*]', d:' Verifying response...',                   wait: 340 },
+  { t:'ok',   p:'[✓]', d:' Response 200 OK',                         wait: 240 },
+  { t:'info', p:'[*]', d:' Finalizing attack record...',             wait: 280 },
+  { t:'ok',   p:'[✓]', d:' Record saved · session token issued',     wait: 300 }
+];
+
+function logLine(prefix, text, cls){
+  var line = document.createElement('div');
+  line.className = 'wa-log-line';
+  var p = document.createElement('span');
+  p.className = 'wa-log-prefix ' + (cls || 'ok');
+  p.textContent = prefix;
+  var t = document.createElement('span');
+  t.className = 'wa-log-text' + (cls === 'info' ? '' : ' ' + cls);
+  t.textContent = text;
+  line.appendChild(p);
+  line.appendChild(t);
+  E.termBody.appendChild(line);
+
+  // Auto scroll smooth ke baris terbaru
+  requestAnimationFrame(scrollTermToBottom);
+}
+
+var seqTimer = null;
+var seqIndex = 0;
+var seqAborted = false;
+var _lastScrollCheck = 0;
+
+function runSequence(data){
+  seqAborted = false;
+  seqIndex = 0;
+  E.termBody.innerHTML = '';
+  E.termPct.textContent = '0%';
+  E.termFill.style.width = '0%';
+  E.success.classList.remove('show');
+  E.termBadge.textContent = '● RUNNING';
+  E.termBadge.style.color = 'var(--amber)';
+  E.termBadge.style.animation = 'waBlink 1.2s steps(2,start) infinite';
+  E.termProg.style.display = 'block';
+
+  function tick(){
+    if(seqAborted) return;
+    if(seqIndex >= ATTACK_SCRIPT.length){
+      finishHack(data);
+      return;
+    }
+    var step = ATTACK_SCRIPT[seqIndex];
+    logLine(step.p, step.d, step.t);
+    sfx(step.t === 'warn' ? 'err' : (step.t === 'ok' ? 'ok' : 'tap'));
+    if(step.t === 'warn') vib(20);
+
+    var pct = Math.round(((seqIndex + 1) / ATTACK_SCRIPT.length) * 100);
+    E.termPct.textContent = pct + '%';
+    E.termFill.style.width = pct + '%';
+
+    // Setiap 5 baris, scroll page ke bawah (biar viewport ikut kalau modal tinggi)
+    if(seqIndex > 0 && seqIndex % 5 === 0){
+      var now = Date.now();
+      if(now - _lastScrollCheck > 800){
+        _lastScrollCheck = now;
+        scrollPageToBottom();
+      }
+    }
+
+    seqIndex++;
+    seqTimer = setTimeout(tick, step.wait);
+  }
+  tick();
+}
+
+function abortSequence(){
+  seqAborted = true;
+  if(seqTimer){ clearTimeout(seqTimer); seqTimer = null; }
+}
+
+function finishHack(data){
+  E.termBadge.textContent = '● SUCCESS';
+  E.termBadge.style.color = 'var(--green)';
+  E.termBadge.style.animation = 'none';
+
+  logLine('[★]', ' ATTACK COMPLETE · ACCESS GRANTED', 'ok');
+  sfx('win');
+  vib([60, 30, 100]);
+
+  // Update state
+  if(state[selected] !== undefined) state[selected] -= 1;
+  var usedKey = selected;
+  if(state[usedKey] <= 0) selected = null;
+  save();
+  render();
+  updateRefill();
+
+  // Fill data sukses
+  E.sMethod.textContent = data.method;
+  E.sTarget.textContent = data.target;
+  E.sDate.textContent = data.date;
+  E.success.classList.add('show');
+  E.termProg.style.display = 'none';
+
+  // Auto scroll ke success panel
+  requestAnimationFrame(function(){
+    scrollTermToBottom();
+    setTimeout(scrollPageToBottom, 200);
+  });
+}
+  
+  // ============================================================
+// MODAL CONTROL
+// ============================================================
+function openModal(){
+  closeSel();           // ← tutup dropdown dulu
+  E.modal.classList.add('show');
+}
+
+function closeModal(){
+  abortSequence();
+  E.modal.classList.remove('show');
+  document.body.classList.remove('wa-modal-open');
+  setTimeout(scrollPageToTop, 200);
+}
+
+E.termClose.addEventListener('click', function(){
+  closeModal();
+  sfx('tap'); vib(8);
+});
+E.modal.addEventListener('click', function(e){
+  if(e.target === E.modal) closeModal();
+});
+
+// ============================================================
+// SUBMIT
+// ============================================================
+function formatDate(d){
+  return d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear() +
+         ' · ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+}
+
+E.form.addEventListener('submit', function(){
+  // Tutup dropdown dulu biar gak overlap
+  closeSel();
+
+  var num = E.target.value.trim();
+
+  if(!num || num.length < 10){
+    E.target.classList.remove('shake');
+    void E.target.offsetWidth;
+    E.target.classList.add('shake');
+    E.target.focus();
+    vib(80); sfx('err');
+    toast('Nomor target tidak valid', 'error');
+    setTimeout(function(){ E.target.classList.remove('shake'); }, 450);
+    return;
+  }
+
+  if(!selected || state[selected] === undefined || state[selected] <= 0){
+    sfx('err'); vib(60);
+    toast('Pilih paket Badak dulu', 'warn');
+    return;
+  }
+
+  E.submit.classList.add('loading');
+  E.submitTxt.textContent = '▶ Processing...';
+
+  var data = {
+    method: PKGS[selected].name,
+    target: num,
+    date: formatDate(new Date())
+  };
+
+  // 1. Smooth scroll halaman ke bawah
+  scrollPageToBottom();
+
+  // 2. Lock body setelah scroll selesai dikit
+  setTimeout(function(){
+    document.body.classList.add('wa-modal-open');
+  }, 320);
+
+  // 3. Buka modal + mulai sequence
+  setTimeout(function(){
+    openModal();
+
+    // Scroll modal juga (biar muncul dari bawah)
+    if(E.modal && E.modal.scrollTo){
+      try { E.modal.scrollTo({ top: E.modal.scrollHeight, behavior: 'smooth' }); } catch(e){}
+    }
+
+    runSequence(data);
+
+    // Reset tombol
+    setTimeout(function(){
+      E.submit.classList.remove('loading');
+      E.submitTxt.textContent = '▶ Execute Attack';
+    }, 800);
+  }, 500);
+});
+
+// ============================================================
+// INIT
+// ============================================================
+render();
+updateRefill();
+
+setInterval(updateRefill, 1000);
+
+setInterval(function(){
+  if(state.lastReset !== todayKey()){
+    state.badak50 = 5; state.badak100 = 3; state.badak200 = 1;
+    state.lastReset = todayKey();
+    save();
+    render();
+    updateRefill();
+    toast('Reset harian · 9 methods available', 'success');
+  }
+}, 30000);
+
+})();
+</script>
+
+<!-- PWA -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('[PWA] SW registered:', reg.scope))
+        .catch(err => console.warn('[PWA] SW failed:', err));
+    });
+  }
+</script>
+
+</body>
+</html>

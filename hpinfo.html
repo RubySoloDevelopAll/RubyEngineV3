@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HP Info — RubyEngine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+
+<!-- ====== PWA META ====== -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c5cff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RubyEngine">
+<link rel="apple-touch-icon" href="image/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="image/icon-192.png">
+
+<style>
+  :root {
+    --hp-accent: #7c5cff;
+    --hp-accent-2: #4f8cff;
+    --hp-card: #0b0d14;
+    --hp-card-2: #10131d;
+    --hp-border: #1c1f2a;
+    --hp-text: #f0f2f8;
+    --hp-text-dim: #7a8090;
+    --hp-text-mid: #a8adbd;
+    --hp-green: #22c55e;
+    --hp-orange: #f59e0b;
+    --hp-red: #ef4444;
+    --hp-cyan: #22d3ee;
+    --hp-pink: #ec4899;
+  }
+
+  body.hp-body {
+    background: #05060a;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  .hp-blob {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.55;
+    filter: blur(120px);
+  }
+  .hp-blob.b1 {
+    top: -20%; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(124,92,255,0.30), transparent 70%);
+  }
+  .hp-blob.b2 {
+    bottom: -25%; right: -15%;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(79,140,255,0.20), transparent 70%);
+  }
+
+  .hp-shell {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+
+  /* ===== HERO CARD ===== */
+  .hp-hero {
+    position: relative;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #12121c 0%, #0d0f1a 55%, #0a0c16 100%);
+    border: 1px solid rgba(124,92,255,0.28);
+    padding: 22px 22px 20px;
+    margin-bottom: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .hp-hero::before {
+    content: '';
+    position: absolute;
+    top: -60%; right: -30%;
+    width: 340px; height: 340px;
+    background: radial-gradient(circle, rgba(124,92,255,0.30), transparent 65%);
+    pointer-events: none;
+  }
+  .hp-hero-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .hp-hero-icon {
+    width: 54px; height: 54px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #7c5cff, #4f8cff);
+    display: grid; place-items: center;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 12px 28px rgba(124,92,255,0.45), inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .hp-hero-info { flex: 1; min-width: 0; }
+  .hp-hero-label {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 4px;
+  }
+  .hp-hero-name {
+    font-size: 19px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .hp-hero-sub {
+    font-size: 12.5px;
+    color: var(--hp-text-mid);
+    margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .hp-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+  .hp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 11px;
+    border-radius: 9px;
+    background: rgba(124,92,255,0.10);
+    border: 1px solid rgba(124,92,255,0.30);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #c4b3ff;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
+  }
+  .hp-chip.green { background: rgba(34,197,94,0.10); border-color: rgba(34,197,94,0.32); color: #6ee79b; }
+  .hp-chip.cyan  { background: rgba(34,211,238,0.10); border-color: rgba(34,211,238,0.32); color: #7ee0ee; }
+  .hp-chip.orange{ background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.32); color: #fbd06a; }
+  .hp-chip.pink  { background: rgba(236,72,153,0.10); border-color: rgba(236,72,153,0.32); color: #f5a4cb; }
+  .hp-chip-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 8px currentColor;
+  }
+
+  /* ===== TABS ===== */
+  .hp-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 5px;
+    border-radius: 14px;
+    background: var(--hp-card);
+    border: 1px solid var(--hp-border);
+    margin-bottom: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    position: relative;
+    z-index: 1;
+  }
+  .hp-tabs::-webkit-scrollbar { display: none; }
+  .hp-tab {
+    flex: 1;
+    min-width: 76px;
+    padding: 11px 10px;
+    border-radius: 10px;
+    background: transparent;
+    border: none;
+    color: var(--hp-text-dim);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .hp-tab svg {
+    width: 14px; height: 14px;
+    opacity: 0.7;
+    flex-shrink: 0;
+    transition: all 0.18s ease;
+  }
+  .hp-tab:hover { color: var(--hp-text-mid); }
+  .hp-tab.active {
+    background: linear-gradient(135deg, var(--hp-accent), var(--hp-accent-2));
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(124,92,255,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .hp-tab.active svg { opacity: 1; }
+
+  /* ===== PANEL ===== */
+  .hp-panel { display: none; animation: hpFade 0.28s ease; }
+  .hp-panel.active { display: block; }
+  @keyframes hpFade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Section */
+  .hp-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    margin-top: 4px;
+  }
+  .hp-section::before {
+    content: '';
+    width: 3px; height: 16px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, var(--hp-accent), var(--hp-accent-2));
+    box-shadow: 0 0 12px rgba(124,92,255,0.6);
+  }
+  .hp-section-title {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  /* Info rows */
+  .hp-info-group {
+    border-radius: 14px;
+    background: var(--hp-card);
+    border: 1px solid var(--hp-border);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .hp-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--hp-border);
+    transition: background 0.15s ease;
+  }
+  .hp-row:last-child { border-bottom: none; }
+  .hp-row:hover { background: rgba(124,92,255,0.03); }
+  .hp-row-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--hp-text-dim);
+    flex-shrink: 0;
+    letter-spacing: 0.01em;
+  }
+  .hp-row-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--hp-text);
+    text-align: right;
+    word-break: break-word;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.005em;
+    min-width: 0;
+    flex: 1;
+  }
+  .hp-row-value.accent { color: var(--hp-accent); }
+  .hp-row-value.green  { color: var(--hp-green); }
+  .hp-row-value.cyan   { color: var(--hp-cyan); }
+  .hp-row-value.orange { color: var(--hp-orange); }
+  .hp-row-value.pink   { color: var(--hp-pink); }
+
+  .hp-value-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex: 1;
+  }
+  .hp-mini-bar {
+    flex-shrink: 0;
+    width: 60px;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+    position: relative;
+  }
+  .hp-mini-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--hp-accent), var(--hp-accent-2));
+    box-shadow: 0 0 8px rgba(124,92,255,0.5);
+    transition: width 0.5s ease;
+  }
+  .hp-mini-bar-fill.green {
+    background: linear-gradient(90deg, #16a34a, #22c55e);
+    box-shadow: 0 0 8px rgba(34,197,94,0.5);
+  }
+  .hp-mini-bar-fill.orange {
+    background: linear-gradient(90deg, #d97706, #f59e0b);
+    box-shadow: 0 0 8px rgba(245,158,11,0.5);
+  }
+  .hp-mini-bar-fill.red {
+    background: linear-gradient(90deg, #dc2626, #ef4444);
+    box-shadow: 0 0 8px rgba(239,68,68,0.5);
+  }
+
+  /* ===== BATTERY HERO ===== */
+  .hp-battery-hero {
+    border-radius: 18px;
+    background: linear-gradient(135deg, #0f1018, #0a0c14);
+    border: 1px solid var(--hp-border);
+    padding: 24px 22px;
+    text-align: center;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hp-battery-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 100%, rgba(34,197,94,0.15), transparent 60%);
+    pointer-events: none;
+  }
+  .hp-battery-visual {
+    position: relative;
+    width: 140px;
+    height: 68px;
+    margin: 0 auto 16px;
+  }
+  .hp-battery-shell {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    border: 3px solid rgba(255,255,255,0.20);
+    background: rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+  .hp-battery-shell::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -12px;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 26px;
+    border-radius: 0 4px 4px 0;
+    background: rgba(255,255,255,0.20);
+  }
+  .hp-battery-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #16a34a, #22c55e);
+    box-shadow: inset 0 0 20px rgba(34,197,94,0.5);
+    transition: width 0.8s ease;
+  }
+  .hp-battery-fill.warn {
+    background: linear-gradient(90deg, #d97706, #f59e0b);
+    box-shadow: inset 0 0 20px rgba(245,158,11,0.5);
+  }
+  .hp-battery-fill.low {
+    background: linear-gradient(90deg, #dc2626, #ef4444);
+    box-shadow: inset 0 0 20px rgba(239,68,68,0.5);
+  }
+  .hp-battery-icon {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 26px;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
+    z-index: 2;
+  }
+  .hp-battery-percent {
+    font-size: 40px;
+    font-weight: 900;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    position: relative;
+  }
+  .hp-battery-percent span {
+    font-size: 22px;
+    color: var(--hp-text-dim);
+    font-weight: 700;
+  }
+  .hp-battery-status {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--hp-text-mid);
+    font-weight: 500;
+    position: relative;
+  }
+  .hp-battery-status strong {
+    color: var(--hp-green);
+    font-weight: 700;
+  }
+
+  /* ===== ACTIONS ===== */
+  .hp-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .hp-btn {
+    padding: 13px 16px;
+    border-radius: 12px;
+    background: var(--hp-card);
+    border: 1px solid var(--hp-border);
+    color: var(--hp-text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.18s ease;
+  }
+  .hp-btn:hover {
+    background: var(--hp-card-2);
+    border-color: var(--hp-accent);
+    color: #fff;
+  }
+  .hp-btn:active { transform: scale(0.97); }
+  .hp-btn.primary {
+    background: linear-gradient(135deg, var(--hp-accent), var(--hp-accent-2));
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(124,92,255,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .hp-btn.primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 30px rgba(124,92,255,0.45), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+
+  /* Toast */
+  .hp-toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: rgba(20,22,32,0.95);
+    border: 1px solid rgba(124,92,255,0.4);
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 12px 34px rgba(0,0,0,0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    z-index: 999;
+    max-width: 90vw;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .hp-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .hp-shell { padding: 18px 16px 50px; }
+    .hp-hero { padding: 18px 18px 16px; border-radius: 18px; }
+    .hp-hero-icon { width: 48px; height: 48px; }
+    .hp-hero-name { font-size: 17px; }
+    .hp-tab { min-width: 68px; padding: 10px 8px; font-size: 10.5px; }
+    .hp-tab svg { width: 13px; height: 13px; }
+    .hp-row { padding: 12px 14px; }
+    .hp-row-label { font-size: 12px; }
+    .hp-row-value { font-size: 12px; }
+    .hp-battery-hero { padding: 20px 18px; }
+    .hp-battery-visual { width: 120px; height: 58px; }
+    .hp-battery-percent { font-size: 34px; }
+    .hp-actions { gap: 8px; }
+    .hp-btn { padding: 12px 12px; font-size: 12.5px; }
+  }
+</style>
+</head>
+
+<body class="hp-body">
+
+  <div class="hp-blob b1"></div>
+  <div class="hp-blob b2"></div>
+
+  <!-- HEADER -->
+  <header class="re-header">
+    <div class="re-header-inner">
+      <a href="home.html" class="re-logo">
+        <div class="re-logo-mark">R</div>
+        <div class="re-logo-text">Ruby<span>Engine</span></div>
+      </a>
+      <div class="re-header-actions">
+        <button class="re-icon-btn" aria-label="Notifications">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <a href="login.html" class="re-icon-btn" aria-label="Account">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAV -->
+  <nav class="re-nav">
+    <div class="re-nav-inner">
+      <a href="home.html">Home</a>
+      <a href="apk.html">APK</a>
+      <a href="game.html">Game</a>
+      <a href="wa.html">WA</a>
+      <a href="rwml.html">RW ML</a>
+      <a href="hpinfo.html" class="active">HP Info</a>
+      <a href="update.html">Update</a>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="hp-shell">
+
+    <!-- HERO -->
+    <section class="hp-hero">
+      <div class="hp-hero-top">
+        <div class="hp-hero-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="3"/>
+            <path d="M12 18h.01"/>
+          </svg>
+        </div>
+        <div class="hp-hero-info">
+          <div class="hp-hero-label">Device Inspector</div>
+          <div class="hp-hero-name" id="heroName">Memuat…</div>
+          <div class="hp-hero-sub" id="heroSub">Membaca info sistem…</div>
+        </div>
+      </div>
+
+      <div class="hp-chips" id="heroChips">
+        <div class="hp-chip"><span class="hp-chip-dot"></span><span id="chipOs">—</span></div>
+        <div class="hp-chip cyan"><span class="hp-chip-dot"></span><span id="chipBrowser">—</span></div>
+        <div class="hp-chip green"><span class="hp-chip-dot"></span><span id="chipScreen">—</span></div>
+      </div>
+    </section>
+
+    <!-- TABS -->
+    <div class="hp-tabs" id="tabs">
+      <button class="hp-tab active" data-tab="device">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="3"/>
+          <path d="M12 18h.01"/>
+        </svg>
+        Device
+      </button>
+      <button class="hp-tab" data-tab="system">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="2"/>
+          <rect x="9" y="9" width="6" height="6"/>
+          <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>
+        </svg>
+        System
+      </button>
+      <button class="hp-tab" data-tab="battery">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="18" height="10" rx="2"/>
+          <path d="M22 11v2"/>
+          <path d="M6 11v2M10 11v2M14 11v2"/>
+        </svg>
+        Battery
+      </button>
+      <button class="hp-tab" data-tab="network">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+          <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+          <line x1="12" y1="20" x2="12.01" y2="20"/>
+        </svg>
+        Network
+      </button>
+      <button class="hp-tab" data-tab="graphics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="6" width="20" height="12" rx="2"/>
+          <path d="M6 10h4v4H6z"/>
+          <path d="M14 10h4M14 14h4"/>
+        </svg>
+        Graphics
+      </button>
+    </div>
+
+    <!-- PANEL DEVICE -->
+    <section class="hp-panel active" data-panel="device">
+      <div class="hp-section">
+        <span class="hp-section-title">Device</span>
+      </div>
+      <div class="hp-info-group">
+        <div class="hp-row">
+          <span class="hp-row-label">Model</span>
+          <span class="hp-row-value accent" id="dModel">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Brand</span>
+          <span class="hp-row-value" id="dBrand">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Platform</span>
+          <span class="hp-row-value" id="dPlatform">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Device Type</span>
+          <span class="hp-row-value" id="dType">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Language</span>
+          <span class="hp-row-value" id="dLang">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Timezone</span>
+          <span class="hp-row-value" id="dTz">—</span>
+        </div>
+      </div>
+
+      <div class="hp-section">
+        <span class="hp-section-title">System</span>
+      </div>
+      <div class="hp-info-group">
+        <div class="hp-row">
+          <span class="hp-row-label">Operating System</span>
+          <span class="hp-row-value accent" id="dOs">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Browser</span>
+          <span class="hp-row-value" id="dBrowser">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">User Agent</span>
+          <span class="hp-row-value" id="dUa" style="font-size:11.5px;opacity:0.8">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL SYSTEM -->
+    <section class="hp-panel" data-panel="system">
+      <div class="hp-section">
+        <span class="hp-section-title">CPU</span>
+      </div>
+      <div class="hp-info-group">
+        <div class="hp-row">
+          <span class="hp-row-label">CPU Cores</span>
+          <span class="hp-row-value green" id="sCores">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Platform Arch</span>
+          <span class="hp-row-value" id="sArch">—</span>
+        </div>
+      </div>
+
+      <div class="hp-section">
+        <span class="hp-section-title">Memory</span>
+      </div>
+      <div class="hp-info-group">
+        <div class="hp-row">
+          <span class="hp-row-label">Device Memory</span>
+          <span class="hp-row-value cyan" id="sRam">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Storage Quota</span>
+          <div class="hp-value-bar">
+            <span class="hp-row-value" id="sStorage">—</span>
+          </div>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Storage Used</span>
+          <div class="hp-value-bar">
+            <div class="hp-mini-bar">
+              <div class="hp-mini-bar-fill" id="sStorageBar" style="width:0%"></div>
+            </div>
+            <span class="hp-row-value" id="sStoragePct">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hp-section">
+        <span class="hp-section-title">Display</span>
+      </div>
+      <div class="hp-info-group">
+        <div class="hp-row">
+          <span class="hp-row-label">Screen Resolution</span>
+          <span class="hp-row-value pink" id="sScreen">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Available Screen</span>
+          <span class="hp-row-value" id="sScreenAvail">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Pixel Ratio</span>
+          <span class="hp-row-value" id="sDpr">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Color Depth</span>
+          <span class="hp-row-value" id="sColor">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Orientation</span>
+          <span class="hp-row-value" id="sOrient">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL BATTERY -->
+    <section class="hp-panel" data-panel="battery">
+      <div class="hp-battery-hero">
+        <div class="hp-battery-visual">
+          <div class="hp-battery-shell">
+            <div class="hp-battery-fill" id="battFill"></div>
+          </div>
+          <div class="hp-battery-icon" id="battIcon">🔋</div>
+        </div>
+        <div class="hp-battery-percent" id="battPct">—<span>%</span></div>
+        <div class="hp-battery-status" id="battStatus">Membaca status…</div>
+      </div>
+
+      <div class="hp-section">
+        <span class="hp-section-title">Battery Detail</span>
+      </div>
+      <div class="hp-info-group">
+        <div class="hp-row">
+          <span class="hp-row-label">Charging</span>
+          <span class="hp-row-value" id="battCharging">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Time to Full</span>
+          <span class="hp-row-value" id="battFull">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Time Remaining</span>
+          <span class="hp-row-value" id="battRemain">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Power Source</span>
+          <span class="hp-row-value" id="battSource">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL NETWORK -->
+    <section class="hp-panel" data-panel="network">
+      <div class="hp-section">
+        <span class="hp-section-title">Connection</span>
+      </div>
+      <div class="hp-info-group">
+        <div class="hp-row">
+          <span class="hp-row-label">Status</span>
+          <span class="hp-row-value" id="nOnline">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Effective Type</span>
+          <span class="hp-row-value cyan" id="nType">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Downlink Speed</span>
+          <span class="hp-row-value" id="nDown">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Round Trip Time</span>
+          <span class="hp-row-value" id="nRtt">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Data Saver</span>
+          <span class="hp-row-value" id="nSaver">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL GRAPHICS -->
+    <section class="hp-panel" data-panel="graphics">
+      <div class="hp-section">
+        <span class="hp-section-title">GPU</span>
+      </div>
+      <div class="hp-info-group">
+        <div class="hp-row">
+          <span class="hp-row-label">Vendor</span>
+          <span class="hp-row-value accent" id="gVendor">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Renderer</span>
+          <span class="hp-row-value" id="gRenderer" style="font-size:12px">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">WebGL Version</span>
+          <span class="hp-row-value" id="gVer">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">WebGL2 Support</span>
+          <span class="hp-row-value" id="gVer2">—</span>
+        </div>
+      </div>
+
+      <div class="hp-section">
+        <span class="hp-section-title">Features</span>
+      </div>
+      <div class="hp-info-group">
+        <div class="hp-row">
+          <span class="hp-row-label">Touch Support</span>
+          <span class="hp-row-value" id="gTouch">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Cookies Enabled</span>
+          <span class="hp-row-value" id="gCookie">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Do Not Track</span>
+          <span class="hp-row-value" id="gDnt">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">PDF Viewer</span>
+          <span class="hp-row-value" id="gPdf">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Local Storage</span>
+          <span class="hp-row-value" id="gLs">—</span>
+        </div>
+        <div class="hp-row">
+          <span class="hp-row-label">Session Storage</span>
+          <span class="hp-row-value" id="gSs">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACTIONS -->
+    <div class="hp-actions">
+      <button type="button" class="hp-btn primary" id="copyBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        Copy Info
+      </button>
+      <button type="button" class="hp-btn" id="refreshBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/>
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+          <path d="M8 16H3v5"/>
+        </svg>
+        Refresh
+      </button>
+    </div>
+
+  </main>
+
+  <div class="hp-toast" id="toast"></div>
+  
+    <!-- ===== SCRIPTS ===== -->
+  <script src="js/sfx.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      /* =========================================
+         HELPERS
+      ========================================= */
+      function $(id) { return document.getElementById(id); }
+
+      function setText(id, txt) {
+        var el = $(id);
+        if (el) el.textContent = txt == null || txt === '' ? '—' : String(txt);
+      }
+
+      function setClass(id, cls) {
+        var el = $(id);
+        if (el) el.className = 'hp-row-value ' + (cls || '');
+      }
+
+      function fmtBytes(bytes) {
+        if (bytes == null || isNaN(bytes)) return '—';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+        if (bytes < 1073741824) return (bytes / 1048576).toFixed(2) + ' MB';
+        return (bytes / 1073741824).toFixed(2) + ' GB';
+      }
+
+      function toast(msg) {
+        var t = $('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toast._t);
+        toast._t = setTimeout(function () {
+          t.classList.remove('show');
+        }, 2200);
+      }
+
+      /* =========================================
+         DEVICE DETECTION
+      ========================================= */
+      function detectDevice() {
+        var ua = navigator.userAgent || '';
+        var brand = 'Unknown';
+        var model = 'Unknown';
+        var os = 'Unknown';
+        var browser = 'Unknown';
+        var type = 'Desktop';
+        var arch = 'Unknown';
+
+        var uaData = navigator.userAgentData;
+        if (uaData && uaData.mobile) {
+          type = 'Mobile';
+        } else if (/tablet|ipad/i.test(ua)) {
+          type = 'Tablet';
+        } else if (/Mobile|Android|iPhone|iPod/i.test(ua)) {
+          type = 'Mobile';
+        }
+
+        if (/Android/i.test(ua)) {
+          os = 'Android';
+          var mAndroid = ua.match(/Android\s+([\d.]+)/);
+          if (mAndroid) os = 'Android ' + mAndroid[1];
+        } else if (/iPhone|iPad|iPod/i.test(ua)) {
+          os = 'iOS';
+          var mIos = ua.match(/OS\s+(\d+[_\d]*)/);
+          if (mIos) os = 'iOS ' + mIos[1].replace(/_/g, '.');
+        } else if (/Windows NT/i.test(ua)) {
+          os = 'Windows';
+          if (/Windows NT 10/.test(ua)) os = 'Windows 10/11';
+          else if (/Windows NT 6\.3/.test(ua)) os = 'Windows 8.1';
+          else if (/Windows NT 6\.1/.test(ua)) os = 'Windows 7';
+        } else if (/Mac OS X/i.test(ua)) {
+          os = 'macOS';
+        } else if (/Linux/i.test(ua)) {
+          os = 'Linux';
+        }
+
+        if (/Android/i.test(ua)) {
+          var mModel = ua.match(/Android\s+[\d.]+;\s*([^;)]+)/);
+          if (mModel) {
+            model = mModel[1].replace(/Build\/.*/, '').trim();
+          }
+
+          if (/Infinix/i.test(model)) brand = 'Infinix';
+          else if (/Samsung|SM-/i.test(model) || /Samsung/i.test(ua)) brand = 'Samsung';
+          else if (/Xiaomi|Redmi|POCO|Mi /i.test(model)) brand = 'Xiaomi';
+          else if (/Oppo|CPH/i.test(model)) brand = 'OPPO';
+          else if (/Vivo/i.test(model)) brand = 'Vivo';
+          else if (/Realme/i.test(model)) brand = 'Realme';
+          else if (/OnePlus/i.test(model)) brand = 'OnePlus';
+          else if (/Huawei|HONOR/i.test(model)) brand = 'Huawei/Honor';
+          else if (/Asus|ASUS/i.test(model)) brand = 'Asus';
+          else if (/Nokia/i.test(model)) brand = 'Nokia';
+          else {
+            var parts = model.split(' ');
+            brand = parts[0] || 'Unknown';
+          }
+        } else if (/iPhone/i.test(ua)) {
+          brand = 'Apple';
+          model = 'iPhone';
+        } else if (/iPad/i.test(ua)) {
+          brand = 'Apple';
+          model = 'iPad';
+        } else if (/Macintosh/i.test(ua)) {
+          brand = 'Apple';
+          model = 'Mac';
+        } else if (/Windows/i.test(ua)) {
+          brand = 'PC';
+          model = 'Windows PC';
+        }
+
+        if (/Edg\//i.test(ua)) {
+          browser = 'Edge';
+          var mE = ua.match(/Edg\/([\d.]+)/);
+          if (mE) browser += ' ' + mE[1].split('.')[0];
+        } else if (/OPR\//i.test(ua) || /Opera/i.test(ua)) {
+          browser = 'Opera';
+        } else if (/Chrome\//i.test(ua) && !/Edg|OPR/i.test(ua)) {
+          browser = 'Chrome';
+          var mC = ua.match(/Chrome\/([\d.]+)/);
+          if (mC) browser += ' ' + mC[1].split('.')[0];
+        } else if (/Firefox\//i.test(ua)) {
+          browser = 'Firefox';
+          var mF = ua.match(/Firefox\/([\d.]+)/);
+          if (mF) browser += ' ' + mF[1].split('.')[0];
+        } else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) {
+          browser = 'Safari';
+        }
+
+        if (uaData && uaData.platform) {
+          arch = uaData.platform;
+        } else if (/arm64|aarch64/i.test(ua)) {
+          arch = 'arm64';
+        } else if (/arm/i.test(ua)) {
+          arch = 'arm';
+        } else if (/x86_64|Win64|x64/i.test(ua)) {
+          arch = 'x86_64';
+        } else if (/x86/i.test(ua)) {
+          arch = 'x86';
+        }
+
+        return {
+          ua: ua,
+          brand: brand,
+          model: model,
+          os: os,
+          browser: browser,
+          type: type,
+          arch: arch
+        };
+      }
+
+      /* =========================================
+         FILL — DEVICE
+      ========================================= */
+      function fillDevice() {
+        var d = detectDevice();
+
+        setText('heroName', d.brand + ' ' + d.model);
+        setText('heroSub', d.os + ' · ' + d.type);
+        setText('chipOs', d.os);
+        setText('chipBrowser', d.browser);
+        setText('chipScreen', window.screen.width + '×' + window.screen.height);
+
+        setText('dModel', d.model);
+        setText('dBrand', d.brand);
+        setText('dPlatform', navigator.platform || '—');
+        setText('dType', d.type);
+        setText('dLang', navigator.language || '—');
+        try {
+          setText('dTz', Intl.DateTimeFormat().resolvedOptions().timeZone || '—');
+        } catch (e) { setText('dTz', '—'); }
+
+        setText('dOs', d.os);
+        setText('dBrowser', d.browser);
+        setText('dUa', d.ua);
+      }
+
+      /* =========================================
+         FILL — SYSTEM
+      ========================================= */
+      function fillSystem() {
+        var d = detectDevice();
+
+        setText('sCores', navigator.hardwareConcurrency
+          ? navigator.hardwareConcurrency + ' Cores'
+          : '—');
+        setText('sArch', d.arch);
+
+        if (navigator.deviceMemory) {
+          setText('sRam', '≥ ' + navigator.deviceMemory + ' GB');
+        } else {
+          setText('sRam', 'Tidak tersedia');
+        }
+
+        setText('sScreen', screen.width + ' × ' + screen.height + ' px');
+        setText('sScreenAvail', screen.availWidth + ' × ' + screen.availHeight + ' px');
+        setText('sDpr', window.devicePixelRatio ? window.devicePixelRatio + 'x' : '—');
+        setText('sColor', screen.colorDepth + '-bit');
+        setText('sOrient',
+          (screen.orientation && screen.orientation.type)
+            ? screen.orientation.type.replace(/-/g, ' ')
+            : (window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'));
+
+        if (navigator.storage && navigator.storage.estimate) {
+          navigator.storage.estimate().then(function (est) {
+            var quota = est.quota || 0;
+            var usage = est.usage || 0;
+            var pct = quota > 0 ? Math.round((usage / quota) * 100) : 0;
+
+            setText('sStorage', fmtBytes(quota) + ' max');
+            setText('sStoragePct', pct + '%');
+            var bar = $('sStorageBar');
+            if (bar) {
+              bar.style.width = pct + '%';
+              bar.classList.remove('green', 'orange', 'red');
+              if (pct < 50) bar.classList.add('green');
+              else if (pct < 80) bar.classList.add('orange');
+              else bar.classList.add('red');
+            }
+          }).catch(function () {
+            setText('sStorage', 'Tidak tersedia');
+            setText('sStoragePct', '—');
+          });
+        } else {
+          setText('sStorage', 'Tidak tersedia');
+          setText('sStoragePct', '—');
+        }
+      }
+
+      /* =========================================
+         FILL — BATTERY
+      ========================================= */
+      function fillBattery() {
+        if (!navigator.getBattery) {
+          $('battPct').innerHTML = '—<span>%</span>';
+          setText('battStatus', 'Battery API tidak didukung browser ini');
+          setText('battCharging', 'Tidak tersedia');
+          setText('battFull', 'Tidak tersedia');
+          setText('battRemain', 'Tidak tersedia');
+          setText('battSource', 'Tidak tersedia');
+          return;
+        }
+
+        navigator.getBattery().then(function (batt) {
+          updateBattery(batt);
+          batt.addEventListener('levelchange', function () { updateBattery(batt); });
+          batt.addEventListener('chargingchange', function () { updateBattery(batt); });
+        }).catch(function () {
+          setText('battStatus', 'Gagal membaca battery');
+        });
+      }
+
+      function updateBattery(batt) {
+        var pct = Math.round(batt.level * 100);
+        var fill = $('battFill');
+        var icon = $('battIcon');
+
+        $('battPct').innerHTML = pct + '<span>%</span>';
+        fill.style.width = pct + '%';
+        fill.classList.remove('warn', 'low');
+        if (pct <= 20) fill.classList.add('low');
+        else if (pct <= 50) fill.classList.add('warn');
+
+        if (batt.charging) {
+          icon.textContent = '⚡';
+        } else if (pct >= 20) {
+          icon.textContent = '🔋';
+        } else {
+          icon.textContent = '🪫';
+        }
+
+        var status = batt.charging ? 'Sedang di-charge' : 'Menggunakan baterai';
+        setText('battStatus', status);
+        $('battStatus').innerHTML = status +
+          (batt.charging ? ' <strong>⚡</strong>' : '');
+
+        setText('battCharging', batt.charging ? '✅ Ya' : '❌ Tidak');
+        setClass('battCharging', batt.charging ? 'green' : 'orange');
+
+        if (batt.charging && batt.chargingTime && isFinite(batt.chargingTime)) {
+          var minFull = Math.round(batt.chargingTime / 60);
+          setText('battFull', minFull > 60
+            ? Math.floor(minFull / 60) + ' jam ' + (minFull % 60) + ' mnt'
+            : minFull + ' menit');
+        } else {
+          setText('battFull', batt.charging ? 'Menghitung…' : '—');
+        }
+
+        if (!batt.charging && batt.dischargingTime && isFinite(batt.dischargingTime)) {
+          var minLeft = Math.round(batt.dischargingTime / 60);
+          setText('battRemain', minLeft > 60
+            ? Math.floor(minLeft / 60) + ' jam ' + (minLeft % 60) + ' mnt'
+            : minLeft + ' menit');
+        } else {
+          setText('battRemain', batt.charging ? '—' : 'Menghitung…');
+        }
+
+        setText('battSource', batt.charging ? '🔌 Charger / USB' : '🔋 Baterai internal');
+      }
+
+      /* =========================================
+         FILL — NETWORK
+      ========================================= */
+      function fillNetwork() {
+        setText('nOnline', navigator.onLine ? '✅ Online' : '❌ Offline');
+        setClass('nOnline', navigator.onLine ? 'green' : 'orange');
+
+        var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (conn) {
+          setText('nType', conn.effectiveType ? conn.effectiveType.toUpperCase() : '—');
+          setText('nDown', conn.downlink ? conn.downlink + ' Mbps' : '—');
+          setText('nRtt', conn.rtt != null ? conn.rtt + ' ms' : '—');
+          setText('nSaver',
+            conn.saveData === true ? 'Aktif' :
+            conn.saveData === false ? 'Nonaktif' : '—');
+          setClass('nSaver', conn.saveData ? 'orange' : 'green');
+        } else {
+          setText('nType', 'Tidak tersedia');
+          setText('nDown', 'Tidak tersedia');
+          setText('nRtt', 'Tidak tersedia');
+          setText('nSaver', 'Tidak tersedia');
+        }
+      }
+
+      /* =========================================
+         FILL — GRAPHICS
+      ========================================= */
+      function fillGraphics() {
+        try {
+          var canvas = document.createElement('canvas');
+          var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+          if (gl) {
+            var dbg = gl.getExtension('WEBGL_debug_renderer_info');
+            if (dbg) {
+              setText('gVendor', gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) || '—');
+              setText('gRenderer', gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || '—');
+            } else {
+              setText('gVendor', gl.getParameter(gl.VENDOR) || '—');
+              setText('gRenderer', gl.getParameter(gl.RENDERER) || '—');
+            }
+            setText('gVer', gl.getParameter(gl.VERSION) || '—');
+          } else {
+            setText('gVendor', 'WebGL tidak tersedia');
+            setText('gRenderer', '—');
+            setText('gVer', '—');
+          }
+
+          var canvas2 = document.createElement('canvas');
+          var gl2 = canvas2.getContext('webgl2');
+          setText('gVer2', gl2 ? '✅ Didukung' : '❌ Tidak');
+          setClass('gVer2', gl2 ? 'green' : 'orange');
+
+        } catch (e) {
+          setText('gVendor', 'Error');
+          setText('gRenderer', 'Error');
+        }
+
+        var touch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        setText('gTouch', touch ? '✅ Ya (' + (navigator.maxTouchPoints || 1) + ' titik)' : '❌ Tidak');
+        setClass('gTouch', touch ? 'green' : 'orange');
+
+        setText('gCookie', navigator.cookieEnabled ? '✅ Ya' : '❌ Tidak');
+        setClass('gCookie', navigator.cookieEnabled ? 'green' : 'orange');
+
+        var dnt = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+        setText('gDnt', dnt === '1' || dnt === 'yes' ? 'Aktif' : 'Nonaktif');
+
+        setText('gPdf', navigator.pdfViewerEnabled ? '✅ Ya' : '❌ Tidak');
+        setClass('gPdf', navigator.pdfViewerEnabled ? 'green' : 'orange');
+
+        try {
+          localStorage.setItem('__test__', '1');
+          localStorage.removeItem('__test__');
+          setText('gLs', '✅ Aktif');
+          setClass('gLs', 'green');
+        } catch (e) {
+          setText('gLs', '❌ Tidak');
+          setClass('gLs', 'orange');
+        }
+
+        try {
+          sessionStorage.setItem('__test__', '1');
+          sessionStorage.removeItem('__test__');
+          setText('gSs', '✅ Aktif');
+          setClass('gSs', 'green');
+        } catch (e) {
+          setText('gSs', '❌ Tidak');
+          setClass('gSs', 'orange');
+        }
+      }
+
+      /* =========================================
+         TABS
+      ========================================= */
+      document.getElementById('tabs').addEventListener('click', function (e) {
+        var b = e.target.closest('.hp-tab');
+        if (!b) return;
+        var tab = b.dataset.tab;
+
+        document.querySelectorAll('.hp-tab').forEach(function (x) {
+          x.classList.toggle('active', x === b);
+        });
+
+        document.querySelectorAll('.hp-panel').forEach(function (p) {
+          p.classList.toggle('active', p.dataset.panel === tab);
+        });
+
+        if (window.SFX && SFX.tap) SFX.tap();
+      });
+
+      /* =========================================
+         COPY INFO
+      ========================================= */
+      document.getElementById('copyBtn').addEventListener('click', function () {
+        var lines = [];
+        lines.push('=== DEVICE INFO ===');
+        lines.push('Model: ' + ($('dModel').textContent || '—'));
+        lines.push('Brand: ' + ($('dBrand').textContent || '—'));
+        lines.push('Platform: ' + ($('dPlatform').textContent || '—'));
+        lines.push('OS: ' + ($('dOs').textContent || '—'));
+        lines.push('Browser: ' + ($('dBrowser').textContent || '—'));
+        lines.push('');
+        lines.push('=== SYSTEM ===');
+        lines.push('CPU Cores: ' + ($('sCores').textContent || '—'));
+        lines.push('RAM: ' + ($('sRam').textContent || '—'));
+        lines.push('Screen: ' + ($('sScreen').textContent || '—'));
+        lines.push('Pixel Ratio: ' + ($('sDpr').textContent || '—'));
+        lines.push('');
+        lines.push('=== BATTERY ===');
+        lines.push('Level: ' + ($('battPct').textContent || '—'));
+        lines.push('Status: ' + ($('battCharging').textContent || '—'));
+        lines.push('');
+        lines.push('=== NETWORK ===');
+        lines.push('Status: ' + ($('nOnline').textContent || '—'));
+        lines.push('Type: ' + ($('nType').textContent || '—'));
+        lines.push('');
+        lines.push('=== GRAPHICS ===');
+        lines.push('GPU: ' + ($('gRenderer').textContent || '—'));
+        lines.push('');
+        lines.push('=== UA ===');
+        lines.push(navigator.userAgent);
+
+        var text = lines.join('\n');
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            toast('✅ Info disalin ke clipboard');
+            if (window.SFX && SFX.pickup) SFX.pickup();
+          }).catch(function () {
+            fallbackCopy(text);
+          });
+        } else {
+          fallbackCopy(text);
+        }
+      });
+
+      function fallbackCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          toast('✅ Info disalin ke clipboard');
+          if (window.SFX && SFX.pickup) SFX.pickup();
+        } catch (e) {
+          toast('❌ Gagal menyalin');
+        }
+        document.body.removeChild(ta);
+      }
+
+      /* =========================================
+         REFRESH
+      ========================================= */
+      document.getElementById('refreshBtn').addEventListener('click', function () {
+        if (window.SFX && SFX.tap) SFX.tap();
+        toast('🔄 Refresh data…');
+        setTimeout(function () {
+          fillAll();
+          toast('✅ Data diperbarui');
+        }, 300);
+      });
+
+      /* =========================================
+         FILL ALL
+      ========================================= */
+      function fillAll() {
+        try { fillDevice(); } catch (e) { console.error(e); }
+        try { fillSystem(); } catch (e) { console.error(e); }
+        try { fillBattery(); } catch (e) { console.error(e); }
+        try { fillNetwork(); } catch (e) { console.error(e); }
+        try { fillGraphics(); } catch (e) { console.error(e); }
+      }
+
+      /* =========================================
+         INIT
+      ========================================= */
+      fillAll();
+
+      window.addEventListener('online', fillNetwork);
+      window.addEventListener('offline', fillNetwork);
+
+      window.addEventListener('resize', function () {
+        setText('sOrient',
+          (screen.orientation && screen.orientation.type)
+            ? screen.orientation.type.replace(/-/g, ' ')
+            : (window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'));
+      });
+
+    })();
+  </script>
+
+  <!-- ====== PWA: Register Service Worker ====== -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
+          .catch(err => console.warn('[PWA] SW registration failed:', err));
+      });
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Offline — RubyEngine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#7c5cff">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%;
+    min-height: 100vh;
+    background: #05060a;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #fff;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .bg-blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(110px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.9;
+  }
+  .bg-blob.b1 {
+    top: -20%; left: 50%;
+    transform: translateX(-50%);
+    width: 720px; height: 720px;
+    background: radial-gradient(circle, rgba(245,158,11,0.22), transparent 70%);
+  }
+  .bg-blob.b2 {
+    bottom: -25%; right: -15%;
+    width: 560px; height: 560px;
+    background: radial-gradient(circle, rgba(124,92,255,0.20), transparent 70%);
+  }
+  .off-shell {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 40px 24px;
+  }
+  .off-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 48px 32px 42px;
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(18,22,34,0.85), rgba(10,12,20,0.92));
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    text-align: center;
+    animation: fadeUp 0.6s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .off-icon {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    display: grid;
+    place-items: center;
+    font-size: 44px;
+    box-shadow:
+      0 20px 50px rgba(245,158,11,0.4),
+      inset 0 2px 0 rgba(255,255,255,0.28);
+    animation: floaty 3.2s ease-in-out infinite;
+  }
+  @keyframes floaty {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+  .off-title {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .off-desc {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.55);
+    max-width: 320px;
+    margin: 0 auto 30px;
+  }
+  .off-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 26px;
+    border-radius: 14px;
+    font-size: 14.5px;
+    font-weight: 700;
+    font-family: inherit;
+    color: #fff;
+    background: linear-gradient(135deg, #4f6cff 0%, #2563eb 55%, #1d4ed8 100%);
+    box-shadow: 0 14px 34px rgba(37,99,235,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+  .off-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 44px rgba(37,99,235,0.65), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .off-btn:active { transform: translateY(0); }
+  .off-btn svg { transition: transform 0.4s ease; }
+  .off-btn:hover svg { transform: rotate(180deg); }
+  .off-footer {
+    margin-top: 30px;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.28);
+  }
+</style>
+</head>
+<body>
+
+  <div class="bg-blob b1"></div>
+  <div class="bg-blob b2"></div>
+
+  <main class="off-shell">
+    <div class="off-card">
+      <div class="off-icon">📡</div>
+      <h1 class="off-title">Kamu Sedang Offline</h1>
+      <p class="off-desc">
+        Sepertinya koneksi internet terputus. Periksa jaringanmu
+        lalu coba lagi.
+      </p>
+      <button type="button" class="off-btn" onclick="location.reload()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/>
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+          <path d="M8 16H3v5"/>
+        </svg>
+        Coba Lagi
+      </button>
+      <div class="off-footer">© 2025 RubyEngine</div>
+    </div>
+  </main>
+
+</body>
+</html>
